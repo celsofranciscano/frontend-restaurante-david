@@ -9,6 +9,7 @@ import {
   Table,
   Users,
   LogOut,
+  DollarSign,
 } from "lucide-react"
 
 import {
@@ -26,7 +27,6 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { Link, useLocation } from "react-router-dom"
-import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/modules/auth/hooks/useAuth"
 import { Button } from "./ui/button"
@@ -36,6 +36,11 @@ const navigationItems = [
     title: "Panel de Control",
     url: "/dashboard",
     icon: LayoutDashboard,
+  },
+  {
+    title: "Caja",
+    url: "/dashboard/caja",
+    icon: DollarSign,
   },
   {
     title: "Usuarios",
@@ -79,11 +84,8 @@ export function AppSidebar() {
   const pathname = location.pathname
   const { logout } = useAuth()
   const currentYear = new Date().getFullYear()
-  const [mounted, setMounted] = useState(false)
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+
 
   return (
     <Sidebar className="border-r bg-background">
@@ -114,8 +116,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
-              {mounted &&
-                navigationItems.map((item) => {
+              { navigationItems.map((item) => {
                   const isActive =
                     pathname === item.url ||
                     (item.url !== "/dashboard" && pathname.startsWith(item.url))

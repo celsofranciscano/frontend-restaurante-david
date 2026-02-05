@@ -5,6 +5,8 @@ import { ProtectedRoute } from "@/modules/auth/components/protected-route"
 import LoginPage from "@/modules/auth/pages/login-page"
 import { HomePage } from "@/pages/home-page"
 import { DashboardPage } from "@/pages/dashboard-page"
+import { UsuariosPage } from "@/modules/usuarios/pages/usuarios-page"
+import { CajaPage } from "@/modules/caja"
 
 function App() {
   return (
@@ -21,6 +23,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/usuarios"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <UsuariosPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/caja"
+            element={
+              <ProtectedRoute allowedRoles={['admin', 'cajero']}>
+                <CajaPage />
               </ProtectedRoute>
             }
           />

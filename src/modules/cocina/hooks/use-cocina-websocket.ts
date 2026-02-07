@@ -25,7 +25,7 @@ export function useCocinaWebSocket() {
     }, []);
 
     useEffect(() => {
-        const socket = io('http://localhost:4000/cocina', {
+        const socket = io('https://backend-restaurante-production.up.railway.app/cocina', {
             transports: ['websocket', 'polling'],
             reconnection: true,
             reconnectionDelay: 1000,

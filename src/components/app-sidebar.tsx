@@ -3,10 +3,10 @@ import {
   Package,
   Soup,
   Utensils,
-  Settings,
+
   ChevronRight,
   Building2,
-  Table,
+
   Users,
   LogOut,
   DollarSign,
@@ -64,11 +64,11 @@ const navigationItems = [
     url: "/dashboard/platos",
     icon: Utensils,
   },
-  {
-    title: "Mesas",
-    url: "/dashboard/mesas",
-    icon: Table,
-  },
+  // {
+  //   title: "Mesas",
+  //   url: "/dashboard/mesas",
+  //   icon: Table,
+  // },
   {
     title: "Transacciones",
     url: "/dashboard/transacciones",
@@ -79,11 +79,11 @@ const navigationItems = [
     url: "/dashboard/cocina",
     icon: ChefHat,
   },
-  {
-    title: "Configuración",
-    url: "/dashboard/configuracion",
-    icon: Settings,
-  },
+  // {
+  //   title: "Configuración",
+  //   url: "/dashboard/configuracion",
+  //   icon: Settings,
+  // },
 ]
 
 export function AppSidebar() {

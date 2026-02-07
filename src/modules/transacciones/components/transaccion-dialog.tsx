@@ -2,6 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useEffect, useState } from "react";
+import { AlertTriangleIcon } from "lucide-react";
 import { cajaService } from "@/modules/caja/services/caja.service";
 import {
     Dialog,
@@ -10,6 +11,16 @@ import {
     DialogTitle,
     DialogFooter,
 } from "@/components/ui/dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogMedia,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
     Form,
     FormControl,
@@ -72,6 +83,7 @@ export function TransaccionDialog({
     nextNroReg,
 }: TransaccionDialogProps) {
     const [cajaActual, setCajaActual] = useState<number | null>(null);
+    const [showNoCajaAlert, setShowNoCajaAlert] = useState(false);
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
@@ -87,14 +99,27 @@ export function TransaccionDialog({
     // Fetch active caja when dialog opens
     useEffect(() => {
         if (open && !transaccionToEdit) {
-            cajaService.obtenerCajaAbierta().then((caja) => {
-                if (caja) {
-                    setCajaActual(caja.id);
-                    form.setValue("caja_id", caja.id);
+            const checkCaja = async () => {
+                try {
+                    const caja = await cajaService.obtenerCajaAbierta();
+                    if (!caja) {
+                        // No hay caja abierta - mostrar AlertDialog
+                        setShowNoCajaAlert(true);
+                        onOpenChange(false);
+                    } else {
+                        setCajaActual(caja.id);
+                        form.setValue("caja_id", caja.id);
+                    }
+                } catch (error) {
+                    console.error('Error al verificar caja:', error);
+                    setShowNoCajaAlert(true);
+                    onOpenChange(false);
                 }
-            }).catch(console.error);
+            };
+
+            checkCaja();
         }
-    }, [open, transaccionToEdit, form]);
+    }, [open, transaccionToEdit, form, onOpenChange]);
 
     useEffect(() => {
         if (transaccionToEdit) {
@@ -132,125 +157,148 @@ export function TransaccionDialog({
     };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                    <DialogTitle>
-                        {transaccionToEdit ? "Editar Transacción" : "Nueva Transacción"}
-                    </DialogTitle>
-                </DialogHeader>
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-                        <FormField
-                            control={form.control}
-                            name="concepto"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Concepto *</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder="Ej. Pedido mesa 5"
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        <FormField
-                            control={form.control}
-                            name="mesa"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Mesa/Ubicación</FormLabel>
-                                    <Select
-                                        onValueChange={field.onChange}
-                                        value={field.value}
-                                    >
+        <>
+            <Dialog open={open} onOpenChange={onOpenChange}>
+                <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                        <DialogTitle>
+                            {transaccionToEdit ? "Editar Transacción" : "Nueva Transacción"}
+                        </DialogTitle>
+                    </DialogHeader>
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+                            <FormField
+                                control={form.control}
+                                name="concepto"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Concepto *</FormLabel>
                                         <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Seleccione una mesa" />
-                                            </SelectTrigger>
+                                            <Input
+                                                placeholder="Ej. Pedido mesa 5"
+                                                {...field}
+                                            />
                                         </FormControl>
-                                        <SelectContent>
-                                            {MESAS_PREDEFINIDAS.map((mesa) => (
-                                                <SelectItem key={mesa} value={mesa}>
-                                                    {mesa}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
-                        <FormField
-                            control={form.control}
-                            name="cliente"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Cliente</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder="Nombre del cliente (opcional)"
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                            <FormField
+                                control={form.control}
+                                name="mesa"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Mesa/Ubicación</FormLabel>
+                                        <Select
+                                            onValueChange={field.onChange}
+                                            value={field.value}
+                                        >
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Seleccione una mesa" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                {MESAS_PREDEFINIDAS.map((mesa) => (
+                                                    <SelectItem key={mesa} value={mesa}>
+                                                        {mesa}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
-                        <FormField
-                            control={form.control}
-                            name="estado"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Estado</FormLabel>
-                                    <Select
-                                        onValueChange={field.onChange}
-                                        value={field.value}
-                                    >
+                            <FormField
+                                control={form.control}
+                                name="cliente"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Cliente</FormLabel>
                                         <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Seleccione un estado" />
-                                            </SelectTrigger>
+                                            <Input
+                                                placeholder="Nombre del cliente (opcional)"
+                                                {...field}
+                                            />
                                         </FormControl>
-                                        <SelectContent>
-                                            <SelectItem value="pendiente">Pendiente</SelectItem>
-                                            <SelectItem value="abierto">Abierto</SelectItem>
-                                            <SelectItem value="cerrado">Cerrado</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="estado"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Estado</FormLabel>
+                                        <Select
+                                            onValueChange={field.onChange}
+                                            value={field.value}
+                                        >
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Seleccione un estado" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="pendiente">Pendiente</SelectItem>
+                                                <SelectItem value="abierto">Abierto</SelectItem>
+                                                <SelectItem value="cerrado">Cerrado</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            {cajaActual && !transaccionToEdit && (
+                                <div className="bg-muted/50 rounded-lg p-3 text-sm">
+                                    <span className="text-muted-foreground">Caja activa:</span>{" "}
+                                    <span className="font-medium">Caja #{cajaActual}</span>
+                                </div>
                             )}
-                        />
 
-                        {cajaActual && !transaccionToEdit && (
-                            <div className="bg-muted/50 rounded-lg p-3 text-sm">
-                                <span className="text-muted-foreground">Caja activa:</span>{" "}
-                                <span className="font-medium">Caja #{cajaActual}</span>
-                            </div>
-                        )}
+                            <DialogFooter>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => onOpenChange(false)}
+                                >
+                                    Cancelar
+                                </Button>
+                                <Button type="submit">
+                                    {transaccionToEdit ? "Actualizar" : "Crear"}
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </Form>
+                </DialogContent>
+            </Dialog>
 
-                        <DialogFooter>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => onOpenChange(false)}
-                            >
-                                Cancelar
-                            </Button>
-                            <Button type="submit">
-                                {transaccionToEdit ? "Actualizar" : "Crear"}
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </Form>
-            </DialogContent>
-        </Dialog>
+            {/* AlertDialog para caja no abierta */}
+            <AlertDialog open={showNoCajaAlert} onOpenChange={setShowNoCajaAlert}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogMedia>
+                            <AlertTriangleIcon className="text-yellow-600" />
+                        </AlertDialogMedia>
+                        <AlertDialogTitle>No hay una caja abierta</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Debe abrir la caja antes de crear transacciones.
+                            Vaya a la sección de Caja para abrir una caja nueva.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogAction onClick={() => setShowNoCajaAlert(false)}>
+                            Entendido
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
     );
 }

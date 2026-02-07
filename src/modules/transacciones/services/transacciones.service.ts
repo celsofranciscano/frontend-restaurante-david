@@ -118,4 +118,11 @@ export const transaccionesService = {
         );
         return data;
     },
+
+    // ========== CAJA INTEGRATION ==========
+
+    getByCaja: async (cajaId: number): Promise<Transaccion[]> => {
+        const { data } = await axiosInstance.get(`/transacciones/caja/${cajaId}`);
+        return data;
+    },
 };

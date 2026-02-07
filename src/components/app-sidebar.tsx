@@ -10,6 +10,7 @@ import {
   Users,
   LogOut,
   DollarSign,
+  Receipt,
 } from "lucide-react"
 
 import {
@@ -68,9 +69,9 @@ const navigationItems = [
     icon: Table,
   },
   {
-    title: "Órdenes",
-    url: "/dashboard/ordenes",
-    icon: Building2,
+    title: "Transacciones",
+    url: "/dashboard/transacciones",
+    icon: Receipt,
   },
   {
     title: "Configuración",
@@ -116,61 +117,61 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
-              { navigationItems.map((item) => {
-                  const isActive =
-                    pathname === item.url ||
-                    (item.url !== "/dashboard" && pathname.startsWith(item.url))
-                  return (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={isActive}
-                        className={cn(
-                          "h-10 px-3 rounded-lg transition-all duration-200 hover:bg-accent",
-                          isActive && "bg-accent"
-                        )}
+              {navigationItems.map((item) => {
+                const isActive =
+                  pathname === item.url ||
+                  (item.url !== "/dashboard" && pathname.startsWith(item.url))
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive}
+                      className={cn(
+                        "h-10 px-3 rounded-lg transition-all duration-200 hover:bg-accent",
+                        isActive && "bg-accent"
+                      )}
+                    >
+                      <Link
+                        to={item.url}
+                        className="flex items-center justify-between group"
                       >
-                        <Link
-                          to={item.url}
-                          className="flex items-center justify-between group"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div
-                              className={cn(
-                                "flex items-center justify-center size-8 rounded-lg transition-colors",
-                                isActive
-                                  ? "bg-primary text-primary-foreground"
-                                  : "bg-muted group-hover:bg-accent"
-                              )}
-                            >
-                              <item.icon
-                                className={cn(
-                                  "size-4",
-                                  isActive && "text-primary-foreground"
-                                )}
-                              />
-                            </div>
-                            <span
-                              className={cn(
-                                "font-medium text-sm",
-                                isActive && "font-semibold"
-                              )}
-                            >
-                              {item.title}
-                            </span>
-                          </div>
-                          <ChevronRight
+                        <div className="flex items-center gap-3">
+                          <div
                             className={cn(
-                              "size-3.5 text-muted-foreground transition-all opacity-0 -translate-x-1",
-                              isActive && "opacity-100 text-primary",
-                              "group-hover:opacity-100 group-hover:translate-x-0"
+                              "flex items-center justify-center size-8 rounded-lg transition-colors",
+                              isActive
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted group-hover:bg-accent"
                             )}
-                          />
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  )
-                })}
+                          >
+                            <item.icon
+                              className={cn(
+                                "size-4",
+                                isActive && "text-primary-foreground"
+                              )}
+                            />
+                          </div>
+                          <span
+                            className={cn(
+                              "font-medium text-sm",
+                              isActive && "font-semibold"
+                            )}
+                          >
+                            {item.title}
+                          </span>
+                        </div>
+                        <ChevronRight
+                          className={cn(
+                            "size-3.5 text-muted-foreground transition-all opacity-0 -translate-x-1",
+                            isActive && "opacity-100 text-primary",
+                            "group-hover:opacity-100 group-hover:translate-x-0"
+                          )}
+                        />
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

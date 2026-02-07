@@ -10,6 +10,7 @@ import { CajaPage } from "@/modules/caja"
 import { ProductosPage } from "@/modules/productos"
 import { IngredientesPage } from "@/modules/ingredientes"
 import { PlatosPage } from "@/modules/platos"
+import { TransaccionesPage } from "@/modules/transacciones/pages/transacciones-page"
 
 function App() {
   return (
@@ -66,6 +67,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <PlatosPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/transacciones"
+            element={
+              <ProtectedRoute allowedRoles={['admin', 'cajero']}>
+                <TransaccionesPage />
               </ProtectedRoute>
             }
           />

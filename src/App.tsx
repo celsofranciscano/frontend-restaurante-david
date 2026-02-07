@@ -7,6 +7,9 @@ import { HomePage } from "@/pages/home-page"
 import { DashboardPage } from "@/pages/dashboard-page"
 import { UsuariosPage } from "@/modules/usuarios/pages/usuarios-page"
 import { CajaPage } from "@/modules/caja"
+import { ProductosPage } from "@/modules/productos"
+import { IngredientesPage } from "@/modules/ingredientes"
+import { PlatosPage } from "@/modules/platos"
 
 function App() {
   return (
@@ -39,6 +42,30 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['admin', 'cajero']}>
                 <CajaPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/productos"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <ProductosPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/ingredientes"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <IngredientesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/platos"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <PlatosPage />
               </ProtectedRoute>
             }
           />

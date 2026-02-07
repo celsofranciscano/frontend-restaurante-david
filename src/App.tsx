@@ -7,11 +7,11 @@ import { HomePage } from "@/pages/home-page"
 import { DashboardPage } from "@/pages/dashboard-page"
 import { UsuariosPage } from "@/modules/usuarios/pages/usuarios-page"
 import { CajaPage } from "@/modules/caja"
-import { CajaReportePage } from "@/modules/caja/pages"
 import { ProductosPage } from "@/modules/productos"
 import { IngredientesPage } from "@/modules/ingredientes"
 import { PlatosPage } from "@/modules/platos"
 import { TransaccionesPage } from "@/modules/transacciones/pages/transacciones-page"
+import { CocinaPage } from "@/modules/cocina/pages"
 
 function App() {
   return (
@@ -76,6 +76,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['admin', 'cajero']}>
                 <TransaccionesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/cocina"
+            element={
+              <ProtectedRoute allowedRoles={['admin', 'cajero', 'cocinero']}>
+                <CocinaPage />
               </ProtectedRoute>
             }
           />

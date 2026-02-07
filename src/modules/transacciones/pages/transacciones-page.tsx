@@ -1,6 +1,15 @@
-import { useEffect, useState } from "react";
-import { Plus } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { Plus, CheckCircle, RefreshCw, Timer, ChefHat } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
 import {
     Card,
     CardContent,
@@ -28,10 +37,14 @@ import { OrderDetailsDialog } from "../components/order-details-dialog";
 import { AddItemDialog } from "../components/add-item-dialog";
 import { ManageExtrasDialog } from "../components/manage-extras-dialog";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export function TransaccionesPage() {
     const [transacciones, setTransacciones] = useState<Transaccion[]>([]);
     const [loading, setLoading] = useState(true);
+    const [pedidosCocina, setPedidosCocina] = useState<Transaccion[]>([]);
+    const [loadingCocina, setLoadingCocina] = useState(false);
+    const [processingId, setProcessingId] = useState<number | null>(null);
 
     // Dialog states
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -53,7 +66,7 @@ export function TransaccionesPage() {
     const [pagos, setPagos] = useState<Pago[]>([]);
     const [activeTab, setActiveTab] = useState<string>("todos");
 
-    const fetchTransacciones = async () => {
+    const fetchTransacciones = useCallback(async () => {
         try {
             setLoading(true);
             const data = await transaccionesService.getAll();
@@ -64,11 +77,52 @@ export function TransaccionesPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    const fetchPedidosCocina = useCallback(async () => {
+        try {
+            setLoadingCocina(true);
+            const data = await transaccionesService.getPendientesCocina();
+            setPedidosCocina(data);
+        } catch (error) {
+            console.error("Error al cargar pedidos de cocina:", error);
+            // Silenciar error si es problema de red/cancelación
+        } finally {
+            setLoadingCocina(false);
+        }
+    }, []);
 
     useEffect(() => {
-        fetchTransacciones();
-    }, []);
+        let mounted = true;
+        
+        const loadData = async () => {
+            if (mounted) {
+                await fetchTransacciones();
+            }
+        };
+        
+        loadData();
+        
+        return () => {
+            mounted = false;
+        };
+    }, [fetchTransacciones]);
+
+    useEffect(() => {
+        let mounted = true;
+        
+        const loadCocina = async () => {
+            if (activeTab === "cocina" && mounted) {
+                await fetchPedidosCocina();
+            }
+        };
+        
+        loadCocina();
+        
+        return () => {
+            mounted = false;
+        };
+    }, [activeTab, fetchPedidosCocina]);
 
     const handleCreate = () => {
         setEditingTransaccion(null);
@@ -269,23 +323,66 @@ export function TransaccionesPage() {
         }
     };
 
+    const handleCompletarOrden = async (id: number) => {
+        if (processingId !== null) return; // Evitar múltiples clicks
+        
+        try {
+            setProcessingId(id);
+            await transaccionesService.completarOrdenCocina(id);
+            toast.success("Pedido marcado como terminado");
+            // Actualizar lista eliminando el pedido completado
+            setPedidosCocina((prev) => prev.filter((p) => p.id !== id));
+            // Refresh transacciones para actualizar estado
+            fetchTransacciones();
+        } catch (error) {
+            console.error("Error al completar pedido:", error);
+            toast.error("Error al completar el pedido");
+        } finally {
+            setProcessingId(null);
+        }
+    };
+
+    const calculateElapsedMinutes = (fechaStr?: string, horaStr?: string) => {
+        if (!fechaStr || !horaStr) return 0;
+        try {
+            let fechaHora: Date;
+            
+            if (horaStr.includes(' - ')) {
+                const [hora, fecha] = horaStr.split(' - ');
+                const [horas, minutos] = hora.split(':');
+                const [dia, mes, anio] = fecha.split('/');
+                fechaHora = new Date(parseInt(anio), parseInt(mes) - 1, parseInt(dia), parseInt(horas), parseInt(minutos));
+            } else {
+                fechaHora = new Date(horaStr);
+            }
+            
+            const now = new Date();
+            const diffMs = now.getTime() - fechaHora.getTime();
+            return Math.floor(diffMs / 60000);
+        } catch (e) {
+            console.error('Error calculando tiempo transcurrido:', e);
+            return 0;
+        }
+    };
+
     // Calculate next nro_reg
     const nextNroReg = transacciones.length > 0
         ? Math.max(...transacciones.map((t) => t.nro_reg)) + 1
         : 1;
 
-    // Filter transacciones by estado
+    // Filter transacciones by estado (usa el campo de la BD directamente)
     const filteredTransacciones = (estado: string) => {
         if (estado === "todos") return transacciones;
         return transacciones.filter((t) => t.estado === estado);
     };
 
-    // Count by status
+    // Count by status (usa el campo de la BD directamente)
     const counts = {
         todos: transacciones.length,
         pendiente: transacciones.filter((t) => t.estado === "pendiente").length,
         abierto: transacciones.filter((t) => t.estado === "abierto").length,
         cerrado: transacciones.filter((t) => t.estado === "cerrado").length,
+        cocina: pedidosCocina.length,
     };
 
     return (
@@ -324,6 +421,10 @@ export function TransaccionesPage() {
                                 </TabsTrigger>
                                 <TabsTrigger value="cerrado">
                                     Cerrados ({counts.cerrado})
+                                </TabsTrigger>
+                                <TabsTrigger value="cocina">
+                                    <ChefHat className="h-4 w-4 mr-2" />
+                                    Cocina ({counts.cocina})
                                 </TabsTrigger>
                             </TabsList>
 
@@ -380,6 +481,135 @@ export function TransaccionesPage() {
                                         onDelete={handleDelete}
                                         onPay={handlePay}
                                     />
+                                )}
+                            </TabsContent>
+
+                            <TabsContent value="cocina" className="mt-6">
+                                {loadingCocina ? (
+                                    <div className="text-center py-8">Cargando pedidos de cocina...</div>
+                                ) : pedidosCocina.length === 0 ? (
+                                    <div className="text-center py-12 text-muted-foreground">
+                                        <ChefHat className="h-16 w-16 mx-auto mb-4 opacity-20" />
+                                        <h3 className="text-lg font-medium">No hay pedidos pendientes en cocina</h3>
+                                        <p>Los nuevos pedidos aparecerán aquí automáticamente.</p>
+                                    </div>
+                                ) : (
+                                    <div className="rounded-md border overflow-hidden">
+                                        <Table>
+                                            <TableHeader className="bg-muted/50">
+                                                <TableRow>
+                                                    <TableHead className="w-[100px]">Hora</TableHead>
+                                                    <TableHead className="w-[80px] text-center"># Items</TableHead>
+                                                    <TableHead className="w-[150px]">Mesa/Para</TableHead>
+                                                    <TableHead className="w-[80px]">Nro</TableHead>
+                                                    <TableHead>Detalle del Pedido</TableHead>
+                                                    <TableHead className="w-[120px] text-right">Acción</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {pedidosCocina.map((pedido) => {
+                                                    const minutosTranscurridos = calculateElapsedMinutes(pedido.fecha, pedido.hora);
+                                                    const esTardado = minutosTranscurridos > 20;
+
+                                                    return (
+                                                        <TableRow
+                                                            key={pedido.id}
+                                                            className={cn(
+                                                                esTardado ? "bg-red-50/50 hover:bg-red-50" : ""
+                                                            )}
+                                                        >
+                                                            <TableCell className="font-medium">
+                                                                <div className="flex flex-col">
+                                                                    <span>
+                                                                        {pedido.hora ? pedido.hora.split(' - ')[0] : "--:--"}
+                                                                    </span>
+                                                                    <Badge
+                                                                        variant={esTardado ? "destructive" : "secondary"}
+                                                                        className="w-fit mt-1 text-[10px] px-1 py-0 h-5"
+                                                                    >
+                                                                        <Timer className="h-3 w-3 mr-1" />
+                                                                        {minutosTranscurridos} min
+                                                                    </Badge>
+                                                                </div>
+                                                            </TableCell>
+                                                            <TableCell className="text-center font-bold text-lg">
+                                                                {pedido.items?.length || 0}
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <div className="font-semibold text-lg">
+                                                                    {pedido.mesa || "Sin mesa"}
+                                                                </div>
+                                                                {pedido.cliente && (
+                                                                    <div className="text-xs text-muted-foreground truncate max-w-[120px]">
+                                                                        {pedido.cliente}
+                                                                    </div>
+                                                                )}
+                                                            </TableCell>
+                                                            <TableCell className="font-mono text-muted-foreground">
+                                                                #{pedido.nro_reg}
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <div className="space-y-2 py-1">
+                                                                    {pedido.items?.map((item) => (
+                                                                        <div key={item.id} className="flex flex-col border-b last:border-0 pb-2 last:pb-0 border-dashed border-gray-200">
+                                                                            <div className="flex items-baseline gap-2">
+                                                                                <span className="font-bold text-lg min-w-[30px]">
+                                                                                    {Math.floor(parseFloat(item.cantidad))}x
+                                                                                </span>
+                                                                                <span className="font-medium text-base">
+                                                                                    {item.nombre || "Item desconocido"}
+                                                                                </span>
+                                                                            </div>
+
+                                                                            {item.notas && (
+                                                                                <div className="text-sm text-red-600 font-medium ml-[38px] bg-red-50 p-1 rounded w-fit px-2">
+                                                                                    ⚠️ {item.notas}
+                                                                                </div>
+                                                                            )}
+
+                                                                            {item.extras && item.extras.length > 0 && (
+                                                                                <div className="ml-[38px] text-sm text-green-700 space-y-0.5 mt-1">
+                                                                                    {item.extras.map((extra) => (
+                                                                                        <div key={extra.id} className="flex items-center gap-1">
+                                                                                            <span className="font-bold">+</span>
+                                                                                            {extra.nombre || "Extra"}
+                                                                                        </div>
+                                                                                    ))}
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </TableCell>
+                                                            <TableCell className="text-right align-middle">
+                                                                <Button
+                                                                    onClick={() => handleCompletarOrden(pedido.id)}
+                                                                    disabled={processingId === pedido.id}
+                                                                    className={cn(
+                                                                        "w-full font-bold transition-all",
+                                                                        processingId === pedido.id
+                                                                            ? "opacity-50 cursor-not-allowed"
+                                                                            : "hover:scale-105 active:scale-95 shadow-md"
+                                                                    )}
+                                                                    variant="default"
+                                                                    size="lg"
+                                                                >
+                                                                    {processingId === pedido.id ? (
+                                                                        <RefreshCw className="h-5 w-5 animate-spin" />
+                                                                    ) : (
+                                                                        <>
+                                                                            <CheckCircle className="h-5 w-5 mr-2" />
+                                                                            Terminar
+                                                                        </>
+                                                                    )}
+                                                                </Button>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    );
+                                                })}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
                                 )}
                             </TabsContent>
                         </Tabs>

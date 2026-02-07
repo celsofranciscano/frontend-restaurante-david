@@ -125,4 +125,15 @@ export const transaccionesService = {
         const { data } = await axiosInstance.get(`/transacciones/caja/${cajaId}`);
         return data;
     },
+
+    // ========== COCINA ==========
+
+    getPendientesCocina: async (): Promise<Transaccion[]> => {
+        const { data } = await axiosInstance.get("/transacciones/cocina/pendientes");
+        return data;
+    },
+
+    completarOrdenCocina: async (id: number): Promise<void> => {
+        await axiosInstance.patch(`/transacciones/${id}/cocina/completar`);
+    },
 };

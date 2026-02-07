@@ -11,6 +11,7 @@ import {
   LogOut,
   DollarSign,
   Receipt,
+  ChefHat,
 } from "lucide-react"
 
 import {
@@ -72,6 +73,11 @@ const navigationItems = [
     title: "Transacciones",
     url: "/dashboard/transacciones",
     icon: Receipt,
+  },
+  {
+    title: "Monitor de Cocina",
+    url: "/dashboard/cocina",
+    icon: ChefHat,
   },
   {
     title: "Configuración",

@@ -61,19 +61,7 @@ type TransaccionDialogProps = {
     nextNroReg: number;
 };
 
-const MESAS_PREDEFINIDAS = [
-    "Mesa 1",
-    "Mesa 2",
-    "Mesa 3",
-    "Mesa 4",
-    "Mesa 5",
-    "Mesa 6",
-    "Mesa 7",
-    "Mesa 8",
-    "Para llevar",
-    "Delivery",
-    "Auto",
-];
+
 
 export function TransaccionDialog({
     open,
@@ -172,10 +160,10 @@ export function TransaccionDialog({
                                 name="concepto"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Concepto *</FormLabel>
+                                        <FormLabel>Concepto</FormLabel>
                                         <FormControl>
                                             <Input
-                                                placeholder="Ej. Pedido mesa 5"
+                                                placeholder="Concepto o descripción del pedido"
                                                 {...field}
                                             />
                                         </FormControl>
@@ -190,23 +178,12 @@ export function TransaccionDialog({
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Mesa/Ubicación</FormLabel>
-                                        <Select
-                                            onValueChange={field.onChange}
-                                            value={field.value}
-                                        >
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Seleccione una mesa" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {MESAS_PREDEFINIDAS.map((mesa) => (
-                                                    <SelectItem key={mesa} value={mesa}>
-                                                        {mesa}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <FormControl>
+                                            <Input
+                                                placeholder="Ej. Mesa 1, Para llevar, Delivery..."
+                                                {...field}
+                                            />
+                                        </FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )}

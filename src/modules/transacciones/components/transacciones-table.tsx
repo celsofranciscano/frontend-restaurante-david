@@ -1,4 +1,4 @@
-import { Eye, Edit, Trash2, CreditCard, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { Eye, Edit, Trash2, CreditCard, CheckCircle2, Clock, ChefHat, AlertCircle } from "lucide-react";
 import {
     Table,
     TableBody,
@@ -48,26 +48,36 @@ const getEstadoBadge = (estado: string) => {
     }
 };
 
-const getPagoStatus = (montoPendiente: string) => {
-    const pendiente = parseFloat(montoPendiente);
-
-    if (isNaN(pendiente)) {
-        return <Badge variant="destructive">Error</Badge>;
-    }
-
-    if (pendiente === 0) {
+const getPendientesBadges = (montoPendiente: string, estadoCocina?: string) => {
+    const pendientePago = parseFloat(montoPendiente) > 0;
+    const pendienteCocina = estadoCocina === 'pendiente';
+    
+    if (!pendientePago && !pendienteCocina) {
         return (
-            <Badge variant="outline" className="text-green-600 border-green-600">
-                Pagado
-            </Badge>
+            <div className="flex items-center gap-1">
+                <Badge variant="outline" className="gap-1 text-green-600 border-green-600">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Completo
+                </Badge>
+            </div>
         );
     }
-
+    
     return (
-        <Badge variant="destructive" className="gap-1">
-            <XCircle className="h-3 w-3" />
-            Pendiente
-        </Badge>
+        <div className="flex flex-col gap-1">
+            {pendienteCocina && (
+                <Badge variant="destructive" className="gap-1 text-xs">
+                    <ChefHat className="h-3 w-3" />
+                    Falta terminar en cocina
+                </Badge>
+            )}
+            {pendientePago && (
+                <Badge variant="destructive" className="gap-1 text-xs">
+                    <AlertCircle className="h-3 w-3" />
+                    Falta pagar
+                </Badge>
+            )}
+        </div>
     );
 };
 
@@ -86,12 +96,12 @@ export function TransaccionesTable({
                         <TableHead className="w-[80px]">Nro.</TableHead>
                         <TableHead className="w-[100px]">Fecha</TableHead>
                         <TableHead className="w-[80px]">Hora</TableHead>
-                        <TableHead>Mesa/Cliente</TableHead>
-                        <TableHead>Concepto</TableHead>
+                        <TableHead>Cliente</TableHead>
+                        <TableHead>Mesa</TableHead>
                         <TableHead className="text-right">Total</TableHead>
                         <TableHead className="text-right">Pendiente</TableHead>
                         <TableHead>Estado</TableHead>
-                        <TableHead>Pago</TableHead>
+                        <TableHead>Pendientes</TableHead>
                         <TableHead className="text-right w-[250px]">Acciones</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -121,9 +131,9 @@ export function TransaccionesTable({
                                     </TableCell>
                                     <TableCell>
                                         <div className="space-y-1">
-                                            {transaccion.mesa && (
-                                                <div className="font-medium">{transaccion.mesa}</div>
-                                            )}
+                                            {/* {transaccion.mesa && (
+                                                <div className="font-medium">{transaccion.concepto}</div>
+                                            )} */}
                                             {transaccion.cliente && (
                                                 <div className="text-sm text-muted-foreground">
                                                     {transaccion.cliente}
@@ -151,7 +161,7 @@ export function TransaccionesTable({
                                         {getEstadoBadge(transaccion.estado)}
                                     </TableCell>
                                     <TableCell>
-                                        {getPagoStatus(transaccion.monto_pendiente)}
+                                        {getPendientesBadges(transaccion.monto_pendiente, transaccion.estado_cocina)}
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center justify-end gap-2">

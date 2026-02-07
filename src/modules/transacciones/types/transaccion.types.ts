@@ -11,11 +11,16 @@ export type Transaccion = {
     mesa?: string | null;
     cliente?: string | null;
     estado: 'pendiente' | 'abierto' | 'cerrado';
+    estado_cocina?: 'pendiente' | 'terminado';
     caja_id?: number | null;
     usuario_id: string;
     creado_en: string;
     actualizado_en: string;
     borrado_en?: string | null;
+
+    // Relaciones extendidas (opcionales)
+    items?: DetalleItem[];
+    pagos?: Pago[];
 };
 
 export type DetalleItem = {
@@ -23,13 +28,21 @@ export type DetalleItem = {
     transaccion_id: number;
     producto_id?: string | null;
     plato_id?: string | null;
-    cantidad: number;
+    cantidad: string;
     precio_unitario: string;
     subtotal: string;
     notas?: string | null;
     // Joined fields from backend
     nombre?: string;
+    producto_nombre?: string | null;
+    plato_nombre?: string | null;
     tipo?: 'producto' | 'plato';
+
+    // Relaciones (opcionales para cocina)
+    producto?: { nombre: string; precio: number };
+    plato?: { nombre: string; precio: number };
+    extras?: DetalleItemExtra[];
+    ingrediente?: { nombre: string };
 };
 
 export type DetalleItemExtra = {
@@ -38,9 +51,13 @@ export type DetalleItemExtra = {
     ingrediente_id?: string | null;
     descripcion?: string | null;
     precio: string;
-    cantidad: number;
+    cantidad: string;
     // Joined fields from backend
     nombre?: string;
+    ingrediente_nombre?: string | null;
+
+    // Relaciones
+    ingrediente?: { nombre: string };
 };
 
 export type Pago = {

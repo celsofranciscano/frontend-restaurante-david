@@ -23,7 +23,6 @@ import { transaccionesService } from "../services/transacciones.service";
 import type {
     Transaccion,
     CreateTransaccionDto,
-    UpdateTransaccionDto,
     Pago,
     CreatePagoDto,
     AddItemDto,
@@ -31,7 +30,7 @@ import type {
     DetalleItemExtra,
 } from "../types/transaccion.types";
 import { TransaccionesTable } from "../components/transacciones-table";
-import { TransaccionDialog } from "../components/transaccion-dialog";
+import { UnifiedTransactionView } from "../components/unified-transaction-view";
 import { PaymentDialog } from "../components/payment-dialog";
 import { OrderDetailsDialog } from "../components/order-details-dialog";
 import { AddItemDialog } from "../components/add-item-dialog";
@@ -47,14 +46,13 @@ export function TransaccionesPage() {
     const [processingId, setProcessingId] = useState<number | null>(null);
 
     // Dialog states
-    const [dialogOpen, setDialogOpen] = useState(false);
+    const [unifiedViewOpen, setUnifiedViewOpen] = useState(false);
     const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
     const [orderDetailsOpen, setOrderDetailsOpen] = useState(false);
     const [addItemDialogOpen, setAddItemDialogOpen] = useState(false);
     const [extrasDialogOpen, setExtrasDialogOpen] = useState(false);
 
     // Current entities
-    const [editingTransaccion, setEditingTransaccion] = useState<Transaccion | null>(null);
     const [payingTransaccion, setPayingTransaccion] = useState<Transaccion | null>(null);
     const [viewingTransaccion, setViewingTransaccion] = useState<Transaccion | null>(null);
     const [currentItemForExtras, setCurrentItemForExtras] = useState<{
@@ -94,15 +92,15 @@ export function TransaccionesPage() {
 
     useEffect(() => {
         let mounted = true;
-        
+
         const loadData = async () => {
             if (mounted) {
                 await fetchTransacciones();
             }
         };
-        
+
         loadData();
-        
+
         return () => {
             mounted = false;
         };
@@ -110,28 +108,28 @@ export function TransaccionesPage() {
 
     useEffect(() => {
         let mounted = true;
-        
+
         const loadCocina = async () => {
             if (activeTab === "cocina" && mounted) {
                 await fetchPedidosCocina();
             }
         };
-        
+
         loadCocina();
-        
+
         return () => {
             mounted = false;
         };
     }, [activeTab, fetchPedidosCocina]);
 
     const handleCreate = () => {
-        setEditingTransaccion(null);
-        setDialogOpen(true);
+        setUnifiedViewOpen(true);
     };
 
     const handleEdit = (transaccion: Transaccion) => {
-        setEditingTransaccion(transaccion);
-        setDialogOpen(true);
+        // For now, editing still uses the order details dialog
+        setViewingTransaccion(transaccion);
+        setOrderDetailsOpen(true);
     };
 
     const handleView = (transaccion: Transaccion) => {
@@ -150,32 +148,45 @@ export function TransaccionesPage() {
         }
     };
 
-    const handleSubmit = async (values: CreateTransaccionDto | UpdateTransaccionDto) => {
+    const handleUnifiedSubmit = async (
+        transaccion: CreateTransaccionDto,
+        items: AddItemDto[],
+        pago?: CreatePagoDto
+    ) => {
         try {
-            if (editingTransaccion) {
-                // Only send fields that are allowed in UpdateTransaccionDto
-                const updateDto: UpdateTransaccionDto = {
-                    concepto: values.concepto,
-                    mesa: values.mesa,
-                    cliente: values.cliente,
-                    estado: values.estado,
-                    // caja_id is NOT allowed in update
-                };
+            // Create transaction
+            const created = await transaccionesService.create(transaccion);
 
-                await transaccionesService.update(
-                    editingTransaccion.id,
-                    updateDto
-                );
-                toast.success("Transacción actualizada correctamente");
+            // Add all items
+            for (const item of items) {
+                await transaccionesService.addItem(created.id, item);
+            }
+
+            // Process payment if provided
+            if (pago) {
+                await transaccionesService.addPago(created.id, pago);
+
+                if (pago.metodo_pago === "efectivo" && pago.monto_recibido) {
+                    const cambio = pago.monto_recibido - pago.monto;
+                    if (cambio > 0) {
+                        toast.success(
+                            `Transacción creada y pagada. Cambio: Bs ${cambio.toFixed(2)}`,
+                            { duration: 5000 }
+                        );
+                    } else {
+                        toast.success("Transacción creada y pagada correctamente");
+                    }
+                } else {
+                    toast.success("Transacción creada y pagada correctamente");
+                }
             } else {
-                await transaccionesService.create(values as CreateTransaccionDto);
                 toast.success("Transacción creada correctamente");
             }
+
             fetchTransacciones();
-            setDialogOpen(false);
         } catch (error) {
             console.error(error);
-            toast.error("Error al guardar transacción");
+            throw error; // Re-throw to let the component handle it
         }
     };
 
@@ -325,7 +336,7 @@ export function TransaccionesPage() {
 
     const handleCompletarOrden = async (id: number) => {
         if (processingId !== null) return; // Evitar múltiples clicks
-        
+
         try {
             setProcessingId(id);
             await transaccionesService.completarOrdenCocina(id);
@@ -346,7 +357,7 @@ export function TransaccionesPage() {
         if (!fechaStr || !horaStr) return 0;
         try {
             let fechaHora: Date;
-            
+
             if (horaStr.includes(' - ')) {
                 const [hora, fecha] = horaStr.split(' - ');
                 const [horas, minutos] = hora.split(':');
@@ -355,7 +366,7 @@ export function TransaccionesPage() {
             } else {
                 fechaHora = new Date(horaStr);
             }
-            
+
             const now = new Date();
             const diffMs = now.getTime() - fechaHora.getTime();
             return Math.floor(diffMs / 60000);
@@ -617,11 +628,10 @@ export function TransaccionesPage() {
                 </Card>
 
                 {/* Dialogs */}
-                <TransaccionDialog
-                    open={dialogOpen}
-                    onOpenChange={setDialogOpen}
-                    onSubmit={handleSubmit}
-                    transaccionToEdit={editingTransaccion}
+                <UnifiedTransactionView
+                    open={unifiedViewOpen}
+                    onOpenChange={setUnifiedViewOpen}
+                    onSubmit={handleUnifiedSubmit}
                     nextNroReg={nextNroReg}
                 />
 

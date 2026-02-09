@@ -280,8 +280,8 @@ export function AddItemDialog({
                         {/* Stock Warning for Productos */}
                         {tipo === "producto" && selectedItemStock !== null && itemId && (
                             <div className={`rounded-lg p-3 text-sm ${selectedItemStock < cantidad
-                                    ? "bg-destructive/10 border border-destructive/20"
-                                    : "bg-muted/50"
+                                ? "bg-destructive/10 border border-destructive/20"
+                                : "bg-muted/50"
                                 }`}>
                                 <div className="flex items-center gap-2">
                                     {selectedItemStock < cantidad && (

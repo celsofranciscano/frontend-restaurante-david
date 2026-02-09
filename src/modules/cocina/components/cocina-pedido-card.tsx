@@ -10,14 +10,13 @@ type CocinaPedidoCardProps = {
     minutosTranscurridos: number;
     esTardado: boolean;
 };
-
-export function CocinaPedidoCard({ 
-    pedido, 
-    minutosTranscurridos, 
-    esTardado 
+export function CocinaPedidoCard({
+    pedido,
+    minutosTranscurridos,
+    esTardado
 }: CocinaPedidoCardProps) {
     return (
-        <Card 
+        <Card
             className={cn(
                 "border-2",
                 esTardado ? "border-destructive bg-destructive/5" : ""
@@ -25,30 +24,41 @@ export function CocinaPedidoCard({
         >
             <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-lg font-mono font-bold px-2">
+                    <div className="flex items-center gap-3">
+                        <Badge
+                            variant="outline"
+                            className="text-xl font-mono font-bold px-3 py-1"
+                        >
                             #{pedido.nro_reg}
                         </Badge>
-                        <span className="text-xl font-bold">
+
+                        <span className="text-3xl font-extrabold">
                             {pedido.mesa || pedido.concepto || "Sin mesa"}
                         </span>
+
                         {pedido.cliente && (
-                            <span className="text-sm text-muted-foreground">
+                            <span className="text-lg text-muted-foreground">
                                 ({pedido.cliente})
                             </span>
                         )}
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Badge variant={esTardado ? "destructive" : "secondary"}>
-                            <Timer className="h-3 w-3 mr-1" />
+
+                    <div className="flex items-center gap-3">
+                        <Badge
+                            variant={esTardado ? "destructive" : "secondary"}
+                            className="text-xl px-3 py-1"
+                        >
+                            <Timer className="h-5 w-5 mr-2" />
                             {minutosTranscurridos} min
                         </Badge>
-                        <span className="text-lg font-mono font-bold text-primary">
-                            {pedido.hora ? pedido.hora.split(' - ')[0] : "--:--"}
+
+                        <span className="text-xl font-mono font-bold text-primary">
+                            {pedido.hora ? pedido.hora.split(" - ")[0] : "--:--"}
                         </span>
                     </div>
                 </div>
             </CardHeader>
+
             <CardContent className="pt-0">
                 <CocinaItemsTable items={pedido.items || []} />
             </CardContent>

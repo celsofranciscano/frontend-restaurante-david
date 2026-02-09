@@ -10,6 +10,9 @@ import {
     ShoppingBag,
     Utensils,
     CreditCard,
+    Sparkles,
+    Receipt,
+    NotebookTabs,
 } from "lucide-react";
 import {
     Dialog,
@@ -40,7 +43,11 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -48,8 +55,10 @@ import { Separator } from "@/components/ui/separator";
 import { productosService } from "@/modules/productos/services/productos.service";
 import { platosService } from "@/modules/platos/services/platos.service";
 import { cajaService } from "@/modules/caja/services/caja.service";
+import { ingredientesService } from "@/modules/ingredientes/services/ingredientes.service";
 import type { Producto } from "@/modules/productos/types/producto.types";
 import type { Plato } from "@/modules/platos/types/plato.types";
+import type { Ingrediente } from "@/modules/ingredientes/types/ingrediente.types";
 import type { CreateTransaccionDto, AddItemDto, CreatePagoDto } from "../types/transaccion.types";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -64,6 +73,17 @@ const transaccionSchema = z.object({
 
 type TransaccionFormValues = z.infer<typeof transaccionSchema>;
 
+// Extra type for items
+type ItemExtra = {
+    id: string;
+    tipo: "ingrediente" | "custom";
+    ingrediente_id?: string;
+    ingrediente_nombre?: string;
+    descripcion?: string;
+    precio: number;
+    cantidad: number;
+};
+
 // Row type for items table
 type ItemRow = {
     id: string;
@@ -73,6 +93,7 @@ type ItemRow = {
     cantidad: number;
     precio: number;
     notas: string;
+    extras: ItemExtra[];
     subtotal: number;
 };
 
@@ -92,6 +113,7 @@ export function UnifiedTransactionView({
     // Data
     const [productos, setProductos] = useState<Producto[]>([]);
     const [platos, setPlatos] = useState<Plato[]>([]);
+    const [ingredientes, setIngredientes] = useState<Ingrediente[]>([]);
     const [cajaActual, setCajaActual] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -105,10 +127,27 @@ export function UnifiedTransactionView({
             item_nombre: "",
             cantidad: 1,
             precio: 0,
+            extras: [],
             notas: "",
             subtotal: 0,
         },
     ]);
+
+    // Extras management
+    const [extrasPopoverOpen, setExtrasPopoverOpen] = useState<{ [key: string]: boolean }>({});
+    const [extraForm, setExtraForm] = useState<{
+        tipo: "ingrediente" | "custom";
+        ingrediente_id: string;
+        descripcion: string;
+        precio: number;
+        cantidad: number;
+    }>({
+        tipo: "ingrediente",
+        ingrediente_id: "",
+        descripcion: "",
+        precio: 0,
+        cantidad: 1,
+    });
 
     // Payment
     const [showPayment, setShowPayment] = useState(false);
@@ -142,12 +181,14 @@ export function UnifiedTransactionView({
     const fetchData = async () => {
         try {
             setLoading(true);
-            const [productosData, platosData] = await Promise.all([
+            const [productosData, platosData, ingredientesData] = await Promise.all([
                 productosService.getAll(),
                 platosService.getAll(),
+                ingredientesService.getAll(),
             ]);
             setProductos(productosData);
             setPlatos(platosData);
+            setIngredientes(ingredientesData);
         } catch (error) {
             console.error(error);
             toast.error("Error al cargar datos");
@@ -214,6 +255,7 @@ export function UnifiedTransactionView({
             item_nombre: "",
             cantidad: 1,
             precio: 0,
+            extras: [],
             notas: "",
             subtotal: 0,
         };
@@ -226,6 +268,67 @@ export function UnifiedTransactionView({
             return;
         }
         setRows(rows.filter((row) => row.id !== id));
+    };
+
+    // Extras management functions
+    const addExtraToRow = (rowId: string) => {
+        const { tipo, ingrediente_id, descripcion, precio, cantidad } = extraForm;
+
+        if (tipo === "ingrediente" && !ingrediente_id) {
+            toast.error("Seleccione un ingrediente");
+            return;
+        }
+        if (tipo === "custom" && !descripcion.trim()) {
+            toast.error("Ingrese una descripción");
+            return;
+        }
+        if (precio <= 0) {
+            toast.error("El precio debe ser mayor a 0");
+            return;
+        }
+
+        const ingrediente = ingredientes.find((i) => i.id === ingrediente_id);
+        const newExtra: ItemExtra = {
+            id: crypto.randomUUID(),
+            tipo,
+            ingrediente_id: tipo === "ingrediente" ? ingrediente_id : undefined,
+            ingrediente_nombre: tipo === "ingrediente" ? ingrediente?.nombre : undefined,
+            descripcion: tipo === "custom" ? descripcion : undefined,
+            precio,
+            cantidad,
+        };
+
+        setRows((prev) =>
+            prev.map((row) => {
+                if (row.id === rowId) {
+                    return { ...row, extras: [...row.extras, newExtra] };
+                }
+                return row;
+            })
+        );
+
+        // Reset form
+        setExtraForm({
+            tipo: "ingrediente",
+            ingrediente_id: "",
+            descripcion: "",
+            precio: 0,
+            cantidad: 1,
+        });
+
+        toast.success("Extra agregado");
+    };
+
+    const removeExtraFromRow = (rowId: string, extraId: string) => {
+        setRows((prev) =>
+            prev.map((row) => {
+                if (row.id === rowId) {
+                    return { ...row, extras: row.extras.filter((e) => e.id !== extraId) };
+                }
+                return row;
+            })
+        );
+        toast.success("Extra eliminado");
     };
 
     const handleKeyDown = (
@@ -321,6 +424,7 @@ export function UnifiedTransactionView({
                 item_nombre: "",
                 cantidad: 1,
                 precio: 0,
+                extras: [],
                 notas: "",
                 subtotal: 0,
             },
@@ -355,11 +459,14 @@ export function UnifiedTransactionView({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[75vw]">
+            <DialogContent className="sm:max-w-[54vw]">
 
                 <DialogHeader className="px-6 pt-6 pb-4 border-b">
                     <DialogTitle className="text-2xl flex items-center justify-between">
-                        <span>🧾 Nueva Transacción #{nextNroReg}</span>
+
+                        <span>
+
+                            Nueva Transacción #{nextNroReg}</span>
                         <Badge variant="outline">Caja #{cajaActual}</Badge>
                     </DialogTitle>
                 </DialogHeader>
@@ -417,7 +524,7 @@ export function UnifiedTransactionView({
                     {/* Items Table */}
                     <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                            <h3 className="font-semibold text-lg">📋 Items del Pedido</h3>
+                            <h3 className="font-semibold text-lg"> Items del Pedido</h3>
                             <Button onClick={addNewRow} variant="outline" size="sm">
                                 <Plus className="h-4 w-4 mr-1" /> Nueva Fila
                             </Button>
@@ -434,6 +541,7 @@ export function UnifiedTransactionView({
                                         <TableHead className="w-[120px]">Cantidad</TableHead>
                                         <TableHead className="w-[120px]">Precio Unit.</TableHead>
                                         <TableHead className="w-[120px]">Subtotal</TableHead>
+                                        <TableHead className="w-[100px]">Extras</TableHead>
                                         <TableHead className="min-w-[200px]">Notas</TableHead>
                                         <TableHead className="w-[60px]"></TableHead>
                                     </TableRow>
@@ -518,6 +626,186 @@ export function UnifiedTransactionView({
                                             {/* Subtotal */}
                                             <TableCell className="text-right font-bold">
                                                 {row.subtotal > 0 ? `Bs ${row.subtotal.toFixed(2)}` : "-"}
+                                            </TableCell>
+
+                                            {/* Extras */}
+                                            <TableCell>
+                                                <Popover
+                                                    open={extrasPopoverOpen[row.id] || false}
+                                                    onOpenChange={(open) =>
+                                                        setExtrasPopoverOpen((prev) => ({
+                                                            ...prev,
+                                                            [row.id]: open,
+                                                        }))
+                                                    }
+                                                >
+                                                    <PopoverTrigger asChild>
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="h-8 w-full"
+                                                            disabled={!row.item_id}
+                                                        >
+                                                            <Sparkles className="h-3 w-3 mr-1" />
+                                                            {row.extras.length > 0
+                                                                ? `${row.extras.length}`
+                                                                : "+"}
+                                                        </Button>
+                                                    </PopoverTrigger>
+                                                    <PopoverContent className="w-96" align="start">
+                                                        <div className="space-y-3">
+                                                            <h4 className="font-semibold text-sm flex items-center gap-2">
+                                                                <Sparkles className="h-4 w-4 text-yellow-600" />
+                                                                Extras - {row.item_nombre}
+                                                            </h4>
+
+                                                            {/* Current extras */}
+                                                            {row.extras.length > 0 && (
+                                                                <div className="space-y-2">
+                                                                    {row.extras.map((extra) => (
+                                                                        <div
+                                                                            key={extra.id}
+                                                                            className="flex items-center justify-between p-2 bg-muted/30 rounded text-xs"
+                                                                        >
+                                                                            <div className="flex-1">
+                                                                                <p className="font-medium">
+                                                                                    {extra.ingrediente_nombre ||
+                                                                                        extra.descripcion}
+                                                                                </p>
+                                                                                <p className="text-muted-foreground">
+                                                                                    Cant: {extra.cantidad} | Bs{" "}
+                                                                                    {extra.precio.toFixed(2)}
+                                                                                </p>
+                                                                            </div>
+                                                                            <Button
+                                                                                variant="ghost"
+                                                                                size="icon"
+                                                                                className="h-6 w-6 text-destructive"
+                                                                                onClick={() =>
+                                                                                    removeExtraFromRow(
+                                                                                        row.id,
+                                                                                        extra.id
+                                                                                    )
+                                                                                }
+                                                                            >
+                                                                                <Trash2 className="h-3 w-3" />
+                                                                            </Button>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+
+                                                            <Separator />
+
+                                                            {/* Add extra form */}
+                                                            <div className="space-y-2">
+                                                                <Select
+                                                                    value={extraForm.tipo}
+                                                                    onValueChange={(v: "ingrediente" | "custom") =>
+                                                                        setExtraForm({
+                                                                            ...extraForm,
+                                                                            tipo: v,
+                                                                            ingrediente_id: "",
+                                                                            descripcion: "",
+                                                                        })
+                                                                    }
+                                                                >
+                                                                    <SelectTrigger className="h-8 text-xs">
+                                                                        <SelectValue />
+                                                                    </SelectTrigger>
+                                                                    <SelectContent>
+                                                                        <SelectItem value="ingrediente">
+                                                                            Ingrediente
+                                                                        </SelectItem>
+                                                                        <SelectItem value="custom">
+                                                                            Personalizado
+                                                                        </SelectItem>
+                                                                    </SelectContent>
+                                                                </Select>
+
+                                                                {extraForm.tipo === "ingrediente" ? (
+                                                                    <Select
+                                                                        value={extraForm.ingrediente_id}
+                                                                        onValueChange={(v) =>
+                                                                            setExtraForm({
+                                                                                ...extraForm,
+                                                                                ingrediente_id: v,
+                                                                            })
+                                                                        }
+                                                                    >
+                                                                        <SelectTrigger className="h-8 text-xs">
+                                                                            <SelectValue placeholder="Seleccionar..." />
+                                                                        </SelectTrigger>
+                                                                        <SelectContent>
+                                                                            {ingredientes.map((ing) => (
+                                                                                <SelectItem
+                                                                                    key={ing.id}
+                                                                                    value={ing.id}
+                                                                                >
+                                                                                    {ing.nombre}
+                                                                                </SelectItem>
+                                                                            ))}
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                ) : (
+                                                                    <Input
+                                                                        placeholder="Descripción"
+                                                                        value={extraForm.descripcion}
+                                                                        onChange={(e) =>
+                                                                            setExtraForm({
+                                                                                ...extraForm,
+                                                                                descripcion: e.target.value,
+                                                                            })
+                                                                        }
+                                                                        className="h-8 text-xs"
+                                                                    />
+                                                                )}
+
+                                                                <div className="grid grid-cols-2 gap-2">
+                                                                    <Input
+                                                                        type="number"
+                                                                        placeholder="Precio"
+                                                                        step="0.01"
+                                                                        min="0"
+                                                                        value={extraForm.precio || ""}
+                                                                        onChange={(e) =>
+                                                                            setExtraForm({
+                                                                                ...extraForm,
+                                                                                precio:
+                                                                                    parseFloat(e.target.value) || 0,
+                                                                            })
+                                                                        }
+                                                                        className="h-8 text-xs"
+                                                                    />
+                                                                    <Input
+                                                                        type="number"
+                                                                        placeholder="Cant"
+                                                                        step="0.01"
+                                                                        min="0.01"
+                                                                        value={extraForm.cantidad}
+                                                                        onChange={(e) =>
+                                                                            setExtraForm({
+                                                                                ...extraForm,
+                                                                                cantidad:
+                                                                                    parseFloat(e.target.value) || 1,
+                                                                            })
+                                                                        }
+                                                                        className="h-8 text-xs"
+                                                                    />
+                                                                </div>
+
+                                                                <Button
+                                                                    size="sm"
+                                                                    className="w-full h-8 text-xs"
+                                                                    onClick={() => addExtraToRow(row.id)}
+                                                                >
+                                                                    <Plus className="h-3 w-3 mr-1" />
+                                                                    Agregar
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+                                                    </PopoverContent>
+                                                </Popover>
                                             </TableCell>
 
                                             {/* Notas */}

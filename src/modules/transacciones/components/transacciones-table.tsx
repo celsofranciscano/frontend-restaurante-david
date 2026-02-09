@@ -172,6 +172,7 @@ export function TransaccionesTable({
                                                 title="Ver detalles del pedido"
                                             >
                                                 <Eye className="h-4 w-4" />
+                                                Registrar pedidos
                                             </Button>
 
                                             {!isPagado && !isCerrado && (

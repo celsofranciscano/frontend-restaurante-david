@@ -120,9 +120,9 @@ export function ManageIngredientesDialog({
       return;
     }
 
-    const cantidadNum = Number(cantidad);
-    if (!cantidad || cantidadNum <= 0 || !Number.isInteger(cantidadNum)) {
-      toast.error("Por favor ingrese una cantidad válida (número entero mayor a 0)");
+    const cantidadNum = parseFloat(cantidad);
+    if (!cantidad || isNaN(cantidadNum) || cantidadNum <= 0) {
+      toast.error("Por favor ingrese una cantidad válida (número mayor a 0)");
       return;
     }
 
@@ -195,9 +195,9 @@ export function ManageIngredientesDialog({
   const handleSaveEdit = async (ingredienteId: string, nombre: string) => {
     if (!plato) return;
 
-    const cantidadNum = Number(editingCantidad);
-    if (!editingCantidad || cantidadNum <= 0 || !Number.isInteger(cantidadNum)) {
-      toast.error("Por favor ingrese una cantidad válida (número entero mayor a 0)");
+    const cantidadNum = parseFloat(editingCantidad);
+    if (!editingCantidad || isNaN(cantidadNum) || cantidadNum <= 0) {
+      toast.error("Por favor ingrese una cantidad válida (número mayor a 0)");
       return;
     }
 
@@ -231,9 +231,16 @@ export function ManageIngredientesDialog({
     ing.nombre.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const formatQuantity = (val: number | string) => {
+    const n = Number(val);
+    if (isNaN(n)) return "-";
+    if (Number.isInteger(n)) return n.toString();
+    return n.toFixed(2).replace(/\.?0+$/, "");
+  };
+
   // Handle Enter key for adding ingredient
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && selectedIngredienteId && Number(cantidad) > 0) {
+    if (e.key === "Enter" && selectedIngredienteId && parseFloat(cantidad) > 0) {
       handleAddIngrediente();
     }
   };
@@ -326,8 +333,8 @@ export function ManageIngredientesDialog({
                   <Input
                     id="cantidad-input"
                     type="number"
-                    step="1"
-                    min="1"
+                    step="any"
+                    min="0"
                     value={cantidad}
                     onChange={(e) => setCantidad(e.target.value)}
                     onKeyPress={handleKeyPress}
@@ -341,7 +348,7 @@ export function ManageIngredientesDialog({
                   <Label className="text-sm font-medium opacity-0 hidden sm:block">Acción</Label>
                   <Button
                     onClick={handleAddIngrediente}
-                    disabled={!selectedIngredienteId || !cantidad || Number(cantidad) <= 0 || isAdding}
+                    disabled={!selectedIngredienteId || !cantidad || isNaN(parseFloat(cantidad)) || parseFloat(cantidad) <= 0 || isAdding}
                     className="w-full h-10"
                     size="default"
                   >
@@ -399,8 +406,8 @@ export function ManageIngredientesDialog({
                             {isEditing ? (
                               <Input
                                 type="number"
-                                step="1"
-                                min="1"
+                                step="any"
+                                min="0"
                                 value={editingCantidad}
                                 onChange={(e) => setEditingCantidad(e.target.value)}
                                 className="h-8 w-full"
@@ -415,7 +422,7 @@ export function ManageIngredientesDialog({
                               />
                             ) : (
                               <span className="text-sm">
-                                {Number(pi.cantidad).toFixed(0)}
+                                {formatQuantity(pi.cantidad)}
                               </span>
                             )}
                           </TableCell>

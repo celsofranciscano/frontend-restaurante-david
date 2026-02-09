@@ -8,6 +8,9 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2, Utensils } from "lucide-react";
+import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
+import { useState } from "react";
+import { platosService } from "../services/platos.service";
 import type { Plato } from "../types/plato.types";
 import {
   AlertDialog,
@@ -21,6 +24,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import type { PlatoIngrediente } from "../types/plato.types";
 
 interface PlatosTableProps {
   platos: Plato[];
@@ -35,12 +39,72 @@ export function PlatosTable({
   onDelete,
   onManageIngredientes
 }: PlatosTableProps) {
+  const IngredientsHover = ({ platoId }: { platoId: string }) => {
+    const [ingredientes, setIngredientes] = useState<PlatoIngrediente[] | null>(null);
+    const [loading, setLoading] = useState(false);
+
+    const load = async () => {
+      if (ingredientes || loading) return;
+      setLoading(true);
+      try {
+        const data = await platosService.getIngredientes(platoId);
+        setIngredientes(data);
+      } catch {
+        setIngredientes([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const preview = ingredientes && ingredientes.length > 0
+      ? ingredientes.slice(0, 2).map((i) => i.nombre || "Desconocido").join(", ") + (ingredientes.length > 2 ? ` +${ingredientes.length - 2}` : "")
+      : "-";
+
+    return (
+      <div className="flex items-center gap-2">
+        <HoverCard>
+          <HoverCardTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onMouseEnter={load}
+              aria-label="Ver ingredientes"
+            >
+              <Utensils className="h-4 w-4" />
+            </Button>
+          </HoverCardTrigger>
+          <HoverCardContent className="w-64">
+            <div className="space-y-2">
+              <h4 className="font-semibold">Ingredientes</h4>
+              {loading ? (
+                <p className="text-sm text-muted-foreground">Cargando...</p>
+              ) : !ingredientes || ingredientes.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No hay ingredientes</p>
+              ) : (
+                <ul className="text-sm space-y-1">
+                  {ingredientes.map((ing) => (
+                    <li key={ing.ingrediente_id} className="flex justify-between">
+                      <span className="truncate">{ing.nombre || "Desconocido"}</span>
+                      <span className="text-muted-foreground">{ing.cantidad} {ing.unidad || ""}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </HoverCardContent>
+        </HoverCard>
+        <span className="text-sm text-muted-foreground">{preview}</span>
+      </div>
+    );
+  };
+
   return (
     <div className="rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Nombre</TableHead>
+            <TableHead>Ingredientes</TableHead>
             <TableHead>Precio (Bs)</TableHead>
             <TableHead className="text-right">Acciones</TableHead>
           </TableRow>
@@ -48,7 +112,7 @@ export function PlatosTable({
         <TableBody>
           {platos.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={3} className="text-center h-24">
+              <TableCell colSpan={4} className="text-center h-24">
                 No hay platos registrados.
               </TableCell>
             </TableRow>
@@ -56,6 +120,9 @@ export function PlatosTable({
             platos.map((plato) => (
               <TableRow key={plato.id}>
                 <TableCell className="font-medium">{plato.nombre}</TableCell>
+                <TableCell>
+                  <IngredientsHover platoId={plato.id} />
+                </TableCell>
                 <TableCell>{Number(plato.precio).toFixed(2)}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">

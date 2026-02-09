@@ -11,8 +11,7 @@ import {
     Utensils,
     CreditCard,
     Sparkles,
-    Receipt,
-    NotebookTabs,
+ 
 } from "lucide-react";
 import {
     Dialog,

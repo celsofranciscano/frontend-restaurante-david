@@ -71,8 +71,8 @@ export function AbrirCajaForm({ onCajaOpened }: AbrirCajaFormProps) {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <MoneyInput register={form.register} watch={form.watch} />
-            
+            <MoneyInput />
+
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? 'Abriendo caja...' : 'Confirmar Apertura'}
             </Button>

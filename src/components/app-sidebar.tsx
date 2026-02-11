@@ -41,7 +41,7 @@ const navigationItems = [
   },
   {
     title: "Caja",
-    url: "/dashboard/caja",
+    url: "/caja",
     icon: DollarSign,
   },
   {

@@ -15,7 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { cajaService } from '../services/caja.service';
 import { MoneyInput } from './money-input';
-import type{ ResumenCierre } from '../types/caja.types';
+import type { ResumenCierre } from '../types/caja.types';
 import { AlertTriangle, CheckCircle, Info } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -70,7 +70,7 @@ export function CerrarCajaForm({ onCajaClosed, onCancel }: CerrarCajaFormProps) 
   // Calcular total contado en tiempo real
   const values = form.watch();
   useEffect(() => {
-    const calc = 
+    const calc =
       (values.b200 || 0) * 200 +
       (values.b100 || 0) * 100 +
       (values.b50 || 0) * 50 +
@@ -96,7 +96,7 @@ export function CerrarCajaForm({ onCajaClosed, onCancel }: CerrarCajaFormProps) 
 
   const handleConfirmClose = async () => {
     if (!pendingValues) return;
-    
+
     try {
       setIsSubmitting(true);
       await cajaService.cerrarCaja(pendingValues);
@@ -118,7 +118,7 @@ export function CerrarCajaForm({ onCajaClosed, onCancel }: CerrarCajaFormProps) 
   const esSobrante = diferencia > 0;
 
   return (
-    <Card className="w-full max-w-4xl mx-auto border-t-4 border-t-red-500">
+    <Card className="w-full  mx-auto border-t-4 border-t-red-500">
       <CardHeader>
         <CardTitle className="flex justify-between items-center">
           <span>Cierre de Caja</span>
@@ -128,14 +128,14 @@ export function CerrarCajaForm({ onCajaClosed, onCancel }: CerrarCajaFormProps) 
           Realiza el conteo físico final. El sistema comparará con el efectivo esperado.
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-6 md:grid-cols-[1.5fr_1fr]">
-        
+      <CardContent className="grid gap-4 sm:gap-6 lg:grid-cols-[1.5fr_1fr]">
+
         {/* Columna Izquierda: Formulario de Conteo */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           <Form {...form}>
-            <form id="cierre-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <MoneyInput register={form.register} watch={form.watch} />
-              
+            <form id="cierre-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
+              <MoneyInput />
+
               <FormField
                 control={form.control}
                 name="cierre_obs"
@@ -143,9 +143,10 @@ export function CerrarCajaForm({ onCajaClosed, onCancel }: CerrarCajaFormProps) 
                   <FormItem>
                     <FormLabel>Observaciones (Opcional)</FormLabel>
                     <FormControl>
-                      <Textarea 
-                        placeholder="Ej: Sobró dinero porque no se registró una venta manual..." 
-                        {...field} 
+                      <Textarea
+                        placeholder="Ej: Sobró dinero porque no se registró una venta manual..."
+                        className="min-h-[80px]"
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
@@ -157,42 +158,41 @@ export function CerrarCajaForm({ onCajaClosed, onCancel }: CerrarCajaFormProps) 
         </div>
 
         {/* Columna Derecha: Resumen y Comparación */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           <Card className="bg-muted/50">
-            <CardHeader>
-              <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">Arqueo</CardTitle>
+            <CardHeader className="pb-3 sm:pb-4">
+              <CardTitle className="text-xs sm:text-sm uppercase tracking-wider text-muted-foreground">Arqueo</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between text-sm">
+            <CardContent className="space-y-3 sm:space-y-4">
+              <div className="flex justify-between text-xs sm:text-sm gap-2">
                 <span className="text-muted-foreground">Total en QR (Banco):</span>
-                <span className="font-semibold text-blue-600 dark:text-blue-400">Bs {resumen.resumen.total_qr.toFixed(2)}</span>
+                <span className="font-semibold text-blue-600 dark:text-blue-400 whitespace-nowrap">Bs {resumen.resumen.total_qr.toFixed(2)}</span>
               </div>
               <Separator />
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-xs sm:text-sm gap-2">
                 <span>Efectivo Esperado:</span>
-                <span className="font-semibold">Bs {resumen.resumen.efectivo_esperado.toFixed(2)}</span>
+                <span className="font-semibold whitespace-nowrap">Bs {resumen.resumen.efectivo_esperado.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-xs sm:text-sm gap-2">
                 <span>Efectivo Contado:</span>
-                <span className="font-semibold">Bs {totalContado.toFixed(2)}</span>
+                <span className="font-semibold whitespace-nowrap">Bs {totalContado.toFixed(2)}</span>
               </div>
-              
+
               <Separator />
 
-              <div className={`p-4 rounded-md flex items-start gap-3 ${
-                esExacto ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
+              <div className={`p-3 sm:p-4 rounded-md flex items-start gap-2 sm:gap-3 ${esExacto ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
                 esSobrante ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
-                'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-              }`}>
-                {esExacto ? <CheckCircle className="w-5 h-5 mt-0.5" /> : 
-                 esSobrante ? <Info className="w-5 h-5 mt-0.5" /> : 
-                 <AlertTriangle className="w-5 h-5 mt-0.5" />}
-                
-                <div className="flex-1">
-                  <p className="font-bold text-sm">
+                  'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                }`}>
+                {esExacto ? <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0" /> :
+                  esSobrante ? <Info className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0" /> :
+                    <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0" />}
+
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-xs sm:text-sm">
                     {esExacto ? 'Cuadre Perfecto' : esSobrante ? 'Sobrante' : 'Faltante'}
                   </p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-xl sm:text-2xl font-bold break-words">
                     {diferencia > 0 ? '+' : ''}{diferencia.toFixed(2)} Bs
                   </p>
                 </div>
@@ -200,11 +200,11 @@ export function CerrarCajaForm({ onCajaClosed, onCancel }: CerrarCajaFormProps) 
             </CardContent>
           </Card>
 
-          <Button 
-            type="submit" 
-            form="cierre-form" 
-            className="w-full" 
-            size="lg" 
+          <Button
+            type="submit"
+            form="cierre-form"
+            className="w-full"
+            size="lg"
             variant={esExacto ? 'default' : 'destructive'}
             disabled={isSubmitting}
           >
@@ -219,7 +219,7 @@ export function CerrarCajaForm({ onCajaClosed, onCancel }: CerrarCajaFormProps) 
           <AlertDialogHeader>
             <AlertDialogTitle>¿Está seguro de cerrar la caja?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción finalizará el turno actual y registrará el arqueo de caja. 
+              Esta acción finalizará el turno actual y registrará el arqueo de caja.
               No podrá deshacer esta operación.
             </AlertDialogDescription>
           </AlertDialogHeader>

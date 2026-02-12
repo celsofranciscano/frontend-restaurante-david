@@ -11,6 +11,7 @@ import { ProductosPage } from "@/modules/productos"
 import { IngredientesPage } from "@/modules/ingredientes"
 import { PlatosPage } from "@/modules/platos"
 import { TransaccionesPage } from "@/modules/transacciones/pages/transacciones-page"
+import { HistorialTransaccionesPage } from "@/modules/transacciones/pages/historial-transacciones-page"
 import { CocinaPage } from "@/modules/cocina/pages"
 
 function App() {
@@ -92,6 +93,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['admin', 'cajero']}>
                 <TransaccionesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/transacciones/historial"
+            element={
+              <ProtectedRoute allowedRoles={['admin', 'cajero']}>
+                <HistorialTransaccionesPage />
               </ProtectedRoute>
             }
           />

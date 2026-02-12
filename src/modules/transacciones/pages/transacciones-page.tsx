@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import { Plus, CheckCircle, RefreshCw, Timer, ChefHat } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Plus, CheckCircle, RefreshCw, Timer, ChefHat, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -20,6 +21,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { transaccionesService } from "../services/transacciones.service";
+import { cajaService } from "@/modules/caja/services/caja.service";
 import type {
     Transaccion,
     CreateTransaccionDto,
@@ -39,6 +41,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 export function TransaccionesPage() {
+    const navigate = useNavigate();
     const [transacciones, setTransacciones] = useState<Transaccion[]>([]);
     const [loading, setLoading] = useState(true);
     const [pedidosCocina, setPedidosCocina] = useState<Transaccion[]>([]);
@@ -64,11 +67,23 @@ export function TransaccionesPage() {
     const [pagos, setPagos] = useState<Pago[]>([]);
     const [activeTab, setActiveTab] = useState<string>("todos");
 
+    const [cajaAbiertaId, setCajaAbiertaId] = useState<number | null>(null);
+
     const fetchTransacciones = useCallback(async () => {
         try {
             setLoading(true);
-            const data = await transaccionesService.getAll();
-            setTransacciones(data);
+            // 1. Obtener caja actual
+            const caja = await cajaService.obtenerCajaAbierta();
+
+            if (caja) {
+                setCajaAbiertaId(caja.id);
+                // 2. Si hay caja, obtener transacciones de esa caja
+                const data = await transaccionesService.getByCaja(caja.id);
+                setTransacciones(data);
+            } else {
+                setCajaAbiertaId(null);
+                setTransacciones([]); // No hay caja, no mostrar transacciones activas
+            }
         } catch (error) {
             console.error(error);
             toast.error("Error al cargar transacciones");
@@ -406,10 +421,27 @@ export function TransaccionesPage() {
                             Sistema de punto de venta - Gestiona pedidos, items y pagos.
                         </p>
                     </div>
-                    <Button onClick={handleCreate}>
-                        <Plus className="mr-2 h-4 w-4" /> Nueva Transacción
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button variant="outline" onClick={() => navigate("/transacciones/historial")}>
+                            <History className="mr-2 h-4 w-4" /> Historial
+                        </Button>
+                        <Button onClick={handleCreate} disabled={!cajaAbiertaId}>
+                            <Plus className="mr-2 h-4 w-4" /> Nueva Transacción
+                        </Button>
+                    </div>
                 </div>
+
+                {!cajaAbiertaId && !loading && (
+                    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4 dark:bg-yellow-900/10">
+                        <div className="flex">
+                            <div className="ml-3">
+                                <p className="text-sm text-yellow-700 dark:text-yellow-400">
+                                    No hay una caja abierta. Debe abrir una caja para registrar nuevas ventas.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <Card>
                     <CardHeader>

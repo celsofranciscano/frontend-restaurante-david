@@ -79,6 +79,11 @@ const navigationItems = [
     url: "/dashboard/cocina",
     icon: ChefHat,
   },
+  {
+    title: "Historial de Transacciones",
+    url: "/transacciones/historial",
+    icon: Receipt,
+  }
   // {
   //   title: "Configuración",
   //   url: "/dashboard/configuracion",

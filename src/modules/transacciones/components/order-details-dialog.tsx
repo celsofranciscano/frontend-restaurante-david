@@ -42,6 +42,7 @@ type OrderDetailsDialogProps = {
     onAddItem: () => void;
     onPay: () => void;
     onManageExtras: (itemId: number, itemName: string) => void;
+    readOnly?: boolean;
 };
 
 export function OrderDetailsDialog({
@@ -52,6 +53,7 @@ export function OrderDetailsDialog({
     onAddItem,
     onPay,
     onManageExtras,
+    readOnly,
 }: OrderDetailsDialogProps) {
     const [items, setItems] = useState<DetalleItem[]>([]);
     const [loadingItems, setLoadingItems] = useState(false);
@@ -183,9 +185,11 @@ export function OrderDetailsDialog({
                 <div className="space-y-3">
                     <div className="flex items-center justify-between">
                         <h3 className="font-semibold">Items del Pedido</h3>
-                        <Button size="sm" onClick={onAddItem}>
-                            <Plus className="h-4 w-4 mr-1" /> Agregar Item
-                        </Button>
+                        {!readOnly && (
+                            <Button size="sm" onClick={onAddItem}>
+                                <Plus className="h-4 w-4 mr-1" /> Agregar Item
+                            </Button>
+                        )}
                     </div>
 
                     {loadingItems ? (
@@ -255,37 +259,40 @@ export function OrderDetailsDialog({
                                                             className="h-8 w-8"
                                                             onClick={() => onManageExtras(item.id, item.nombre || "Item")}
                                                             title="Gestionar extras"
+                                                            disabled={readOnly}
                                                         >
                                                             <Sparkles className="h-4 w-4 text-yellow-600" />
                                                         </Button>
-                                                        <AlertDialog>
-                                                            <AlertDialogTrigger asChild>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    className="h-8 w-8 text-destructive"
-                                                                >
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                </Button>
-                                                            </AlertDialogTrigger>
-                                                            <AlertDialogContent>
-                                                                <AlertDialogHeader>
-                                                                    <AlertDialogTitle>¿Eliminar item?</AlertDialogTitle>
-                                                                    <AlertDialogDescription>
-                                                                        Se eliminará "{item.nombre}" del pedido.
-                                                                    </AlertDialogDescription>
-                                                                </AlertDialogHeader>
-                                                                <AlertDialogFooter>
-                                                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                                                    <AlertDialogAction
-                                                                        onClick={() => handleRemoveItem(item.id)}
-                                                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                        {!readOnly && (
+                                                            <AlertDialog>
+                                                                <AlertDialogTrigger asChild>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-8 w-8 text-destructive"
                                                                     >
-                                                                        Eliminar
-                                                                    </AlertDialogAction>
-                                                                </AlertDialogFooter>
-                                                            </AlertDialogContent>
-                                                        </AlertDialog>
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </Button>
+                                                                </AlertDialogTrigger>
+                                                                <AlertDialogContent>
+                                                                    <AlertDialogHeader>
+                                                                        <AlertDialogTitle>¿Eliminar item?</AlertDialogTitle>
+                                                                        <AlertDialogDescription>
+                                                                            Se eliminará "{item.nombre}" del pedido.
+                                                                        </AlertDialogDescription>
+                                                                    </AlertDialogHeader>
+                                                                    <AlertDialogFooter>
+                                                                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                                                        <AlertDialogAction
+                                                                            onClick={() => handleRemoveItem(item.id)}
+                                                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                                        >
+                                                                            Eliminar
+                                                                        </AlertDialogAction>
+                                                                    </AlertDialogFooter>
+                                                                </AlertDialogContent>
+                                                            </AlertDialog>
+                                                        )}
                                                     </div>
                                                 </TableCell>
                                             </TableRow>
@@ -327,7 +334,7 @@ export function OrderDetailsDialog({
                     <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
                         Cerrar
                     </Button>
-                    {montoPendiente > 0 && (
+                    {montoPendiente > 0 && !readOnly && (
                         <Button onClick={onPay} className="flex-1">
                             Procesar Pago
                         </Button>

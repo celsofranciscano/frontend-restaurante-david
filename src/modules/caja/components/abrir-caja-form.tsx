@@ -61,7 +61,7 @@ export function AbrirCajaForm({ onCajaOpened }: AbrirCajaFormProps) {
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
+    <Card className="w-full max-w-9xl mx-auto">
       <CardHeader>
         <CardTitle>Apertura de Caja</CardTitle>
         <CardDescription>

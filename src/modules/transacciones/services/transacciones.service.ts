@@ -126,6 +126,11 @@ export const transaccionesService = {
         return data;
     },
 
+    getResumenItems: async (cajaId: number): Promise<{ nombre: string; cantidad: number; total: number; tipo: 'producto' | 'plato' }[]> => {
+        const { data } = await axiosInstance.get(`/transacciones/caja/${cajaId}/resumen`);
+        return data;
+    },
+
     // ========== COCINA ==========
 
     getPendientesCocina: async (): Promise<Transaccion[]> => {

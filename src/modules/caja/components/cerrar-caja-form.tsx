@@ -90,6 +90,7 @@ export function CerrarCajaForm({ onCajaClosed, onCancel }: CerrarCajaFormProps) 
   }, []);
 
   const onSubmit = (values: CerrarCajaFormValues) => {
+    console.log("DEBUG: CerrarCajaForm onSubmit values:", values);
     setPendingValues(values);
     setShowConfirmDialog(true);
   };
@@ -99,6 +100,7 @@ export function CerrarCajaForm({ onCajaClosed, onCancel }: CerrarCajaFormProps) 
 
     try {
       setIsSubmitting(true);
+      console.log("DEBUG: Sending to backend:", pendingValues);
       await cajaService.cerrarCaja(pendingValues);
       toast.success('Caja cerrada exitosamente');
       onCajaClosed();

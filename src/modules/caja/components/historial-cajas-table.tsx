@@ -10,6 +10,8 @@ import { format, isValid } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";
 import type { CajaTurnoResponse } from "../types/caja.types";
+import { Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface HistorialCajasTableProps {
   cajas: CajaTurnoResponse[];
@@ -21,7 +23,7 @@ const formatTime = (dateString: string | null) => {
   if (dateString.includes(' - ')) {
     return dateString.split(' - ')[0]; // Retorna HH:mm
   }
-  
+
   // Intenta parsear como ISO
   const date = new Date(dateString);
   if (isValid(date)) {
@@ -41,6 +43,12 @@ const formatDate = (dateString: string) => {
 }
 
 export function HistorialCajasTable({ cajas }: HistorialCajasTableProps) {
+  const navigate = useNavigate();
+
+  const handleRowClick = (cajaId: number) => {
+    navigate(`/caja/${cajaId}`);
+  };
+
   if (cajas.length === 0) {
     return <div className="text-center py-10 text-muted-foreground">No hay historial de cajas.</div>;
   }
@@ -61,7 +69,11 @@ export function HistorialCajasTable({ cajas }: HistorialCajasTableProps) {
         </TableHeader>
         <TableBody>
           {cajas.map((caja) => (
-            <TableRow key={caja.id}>
+            <TableRow
+              key={caja.id}
+              className="cursor-pointer hover:bg-muted/50"
+              onClick={() => handleRowClick(caja.id)}
+            >
               <TableCell className="font-medium">
                 {formatDate(caja.fecha)}
               </TableCell>
@@ -69,7 +81,7 @@ export function HistorialCajasTable({ cajas }: HistorialCajasTableProps) {
                 {formatTime(caja.hora_apertura)}
               </TableCell>
               <TableCell>
-                 {formatTime(caja.hora_cierre)}
+                {formatTime(caja.hora_cierre)}
               </TableCell>
               <TableCell>Bs {caja.monto_inicial.toFixed(2)}</TableCell>
               <TableCell className="text-green-600 font-semibold">
@@ -79,9 +91,12 @@ export function HistorialCajasTable({ cajas }: HistorialCajasTableProps) {
                 Bs {caja.total_salidas.toFixed(2)}
               </TableCell>
               <TableCell>
-                <Badge variant={caja.cerrada ? "default" : "destructive"}>
-                  {caja.cerrada ? "Cerrada" : "Abierta"}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant={caja.cerrada ? "default" : "destructive"}>
+                    {caja.cerrada ? "Cerrada" : "Abierta"}
+                  </Badge>
+                  <Eye className="w-4 h-4 text-muted-foreground" />
+                </div>
               </TableCell>
             </TableRow>
           ))}

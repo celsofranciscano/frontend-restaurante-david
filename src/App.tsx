@@ -6,7 +6,7 @@ import LoginPage from "@/modules/auth/pages/login-page"
 import { HomePage } from "@/pages/home-page"
 import { DashboardPage } from "@/pages/dashboard-page"
 import { UsuariosPage } from "@/modules/usuarios/pages/usuarios-page"
-import { CajaPage, CajaReportePage } from "@/modules/caja/pages"
+import { CajaPage, CajaReportePage, CajaDetallePage } from "@/modules/caja/pages"
 import { ProductosPage } from "@/modules/productos"
 import { IngredientesPage } from "@/modules/ingredientes"
 import { PlatosPage } from "@/modules/platos"
@@ -44,6 +44,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['admin', 'cajero']}>
                 <CajaPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/caja/:id"
+            element={
+              <ProtectedRoute allowedRoles={['admin', 'cajero']}>
+                <CajaDetallePage />
               </ProtectedRoute>
             }
           />

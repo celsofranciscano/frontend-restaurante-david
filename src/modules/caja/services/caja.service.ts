@@ -1,11 +1,13 @@
 import axiosInstance from '@/lib/axios';
-import type {   AbrirCajaDto,
+import type {
+  AbrirCajaDto,
   CajaTurnoResponse,
   CerrarCajaDto,
   CierreCajaResponse,
   GastoCajaResponse,
   RegistrarGastoDto,
-  ResumenCierre, } from '../types/caja.types';
+  ResumenCierre,
+} from '../types/caja.types';
 
 export const cajaService = {
   abrirCaja: async (dto: AbrirCajaDto): Promise<CajaTurnoResponse> => {
@@ -39,9 +41,14 @@ export const cajaService = {
     const { data } = await axiosInstance.get(`/caja/historial?limit=${limit}`);
     return data;
   },
-  
+
   obtenerHistorialGastos: async (limit = 50): Promise<GastoCajaResponse[]> => {
     const { data } = await axiosInstance.get(`/caja/gastos/historial?limit=${limit}`);
+    return data;
+  },
+
+  obtenerDetalleCaja: async (id: number): Promise<ResumenCierre> => {
+    const { data } = await axiosInstance.get(`/caja/${id}/detalle`);
     return data;
   }
 };

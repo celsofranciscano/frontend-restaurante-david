@@ -39,7 +39,7 @@ const formSchema = z.object({
     referencia_qr: z.string().optional(),
 }).refine(
     (data) => {
-        if (data.metodo_pago === "efectivo" && data.monto_recibido) {
+        if (data.metodo_pago === "efectivo" && data.monto_recibido !== undefined) {
             return data.monto_recibido >= data.monto;
         }
         return true;
@@ -85,18 +85,18 @@ export function PaymentDialog({
 
     useEffect(() => {
         if (transaccion && open) {
-            const montoPendiente = Number(transaccion.monto_pendiente);
             form.reset({
                 metodo_pago: "efectivo",
-                monto: montoPendiente,
-                monto_recibido: montoPendiente,
+                monto: 0,
+                monto_recibido: 0,
                 referencia_qr: "",
             });
+            setCambioCalculado(0);
         }
     }, [transaccion, open, form]);
 
     useEffect(() => {
-        if (metodoPago === "efectivo" && montoRecibido && monto) {
+        if (metodoPago === "efectivo" && montoRecibido !== undefined && monto > 0) {
             const cambio = montoRecibido - monto;
             setCambioCalculado(cambio >= 0 ? cambio : 0);
         } else {
@@ -113,8 +113,8 @@ export function PaymentDialog({
         };
 
         await onSubmit(dto);
-        onOpenChange(false);
-        form.reset();
+        // onOpenChange(false) called by parent or ensure it here? 
+        // Logic in hook calls setPaymentDialogOpen(false)
     };
 
     if (!transaccion) return null;
@@ -236,11 +236,14 @@ export function PaymentDialog({
                                         <Input
                                             type="number"
                                             step="0.01"
-                                            min="0.01"
+                                            min="0"
                                             max={montoPendiente}
                                             placeholder="0.00"
                                             {...field}
-                                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                            onChange={(e) => {
+                                                const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                                                field.onChange(val);
+                                            }}
                                         />
                                     </FormControl>
                                     <FormDescription>
@@ -266,9 +269,10 @@ export function PaymentDialog({
                                                     min="0"
                                                     placeholder="0.00"
                                                     {...field}
-                                                    onChange={(e) =>
-                                                        field.onChange(parseFloat(e.target.value) || 0)
-                                                    }
+                                                    onChange={(e) => {
+                                                        const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                                                        field.onChange(val);
+                                                    }}
                                                 />
                                             </FormControl>
                                             <FormMessage />

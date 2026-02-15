@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, Edit, Trash2, CreditCard, CheckCircle2, Clock, ChefHat, AlertCircle } from "lucide-react";
+import {  Edit, Trash2, CreditCard, CheckCircle2, Clock, ChefHat, AlertCircle } from "lucide-react";
 import {
     Table,
     TableBody,
@@ -94,7 +94,7 @@ const getPendientesBadges = (montoPendiente: string, estadoCocina?: string) => {
 
 export function TransaccionesTable({
     transacciones,
-    onView,
+    
     onEdit,
     onDelete,
     onPay,
@@ -121,16 +121,16 @@ export function TransaccionesTable({
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[80px]">Nro.</TableHead>
-                            <TableHead className="w-[100px]">Fecha</TableHead>
-                            <TableHead className="w-[80px]">Hora</TableHead>
+                            <TableHead className="w-20">Nro.</TableHead>
+                            <TableHead className="w-25">Fecha</TableHead>
+                            <TableHead className="w-20">Hora</TableHead>
                             <TableHead>Cliente</TableHead>
                             <TableHead>Mesa</TableHead>
                             <TableHead className="text-right">Total</TableHead>
                             <TableHead className="text-right">Pendiente</TableHead>
                             <TableHead>Estado</TableHead>
                             <TableHead>Pendientes</TableHead>
-                            <TableHead className="text-right w-[250px]">Acciones</TableHead>
+                            <TableHead className="text-right w-62.5">Acciones</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -193,15 +193,7 @@ export function TransaccionesTable({
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center justify-end gap-2">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => onView(transaccion)}
-                                                    title="Ver detalles del pedido"
-                                                >
-                                                    <Eye className="h-4 w-4" />
-                                                    Registrar pedidos
-                                                </Button>
+
 
                                                 {!isPagado && !isCerrado && (
                                                     <Button

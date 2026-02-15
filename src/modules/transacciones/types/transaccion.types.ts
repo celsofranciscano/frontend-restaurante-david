@@ -95,6 +95,7 @@ export type AddItemDto = {
     plato_id?: string;
     cantidad: number;
     notas?: string;
+    extras?: AddExtraDto[];
 };
 
 export type AddExtraDto = {

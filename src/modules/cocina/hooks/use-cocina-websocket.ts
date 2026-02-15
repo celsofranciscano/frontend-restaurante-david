@@ -25,7 +25,10 @@ export function useCocinaWebSocket() {
     }, []);
 
     useEffect(() => {
-        const socket = io('https://backend-restaurante-production.up.railway.app/cocina', {
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+        const socketUrl = apiUrl.replace('/api', '');
+
+        const socket = io(`${socketUrl}/cocina`, {
             transports: ['websocket', 'polling'],
             reconnection: true,
             reconnectionDelay: 1000,

@@ -11,8 +11,15 @@ import {
     Utensils,
     CreditCard,
     Sparkles,
- 
+    Check,
+    ChevronsUpDown,
 } from "lucide-react";
+import {
+    Command,
+    CommandGroup,
+    CommandItem,
+    CommandList,
+} from "@/components/ui/command";
 import {
     Dialog,
     DialogContent,
@@ -54,10 +61,8 @@ import { Separator } from "@/components/ui/separator";
 import { productosService } from "@/modules/productos/services/productos.service";
 import { platosService } from "@/modules/platos/services/platos.service";
 import { cajaService } from "@/modules/caja/services/caja.service";
-import { ingredientesService } from "@/modules/ingredientes/services/ingredientes.service";
 import type { Producto } from "@/modules/productos/types/producto.types";
 import type { Plato } from "@/modules/platos/types/plato.types";
-import type { Ingrediente } from "@/modules/ingredientes/types/ingrediente.types";
 import type { CreateTransaccionDto, AddItemDto, CreatePagoDto } from "../types/transaccion.types";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -112,7 +117,6 @@ export function UnifiedTransactionView({
     // Data
     const [productos, setProductos] = useState<Producto[]>([]);
     const [platos, setPlatos] = useState<Plato[]>([]);
-    const [ingredientes, setIngredientes] = useState<Ingrediente[]>([]);
     const [cajaActual, setCajaActual] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -135,17 +139,9 @@ export function UnifiedTransactionView({
     // Extras management
     const [extrasPopoverOpen, setExtrasPopoverOpen] = useState<{ [key: string]: boolean }>({});
     const [extraForm, setExtraForm] = useState<{
-        tipo: "ingrediente" | "custom";
-        ingrediente_id: string;
-        descripcion: string;
         precio: number;
-        cantidad: number;
     }>({
-        tipo: "ingrediente",
-        ingrediente_id: "",
-        descripcion: "",
         precio: 0,
-        cantidad: 1,
     });
 
     // Payment
@@ -153,7 +149,8 @@ export function UnifiedTransactionView({
     const [metodoPago, setMetodoPago] = useState<"efectivo" | "qr">("efectivo");
     const [montoPago, setMontoPago] = useState<number>(0);
     const [montoRecibido, setMontoRecibido] = useState<number>(0);
-    const [referenciaQr, setReferenciaQr] = useState<string>("");
+
+    const [mesaOpen, setMesaOpen] = useState(false);
 
     // Refs for keyboard navigation
     const cantidadInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
@@ -180,14 +177,12 @@ export function UnifiedTransactionView({
     const fetchData = async () => {
         try {
             setLoading(true);
-            const [productosData, platosData, ingredientesData] = await Promise.all([
+            const [productosData, platosData] = await Promise.all([
                 productosService.getAll(),
                 platosService.getAll(),
-                ingredientesService.getAll(),
             ]);
             setProductos(productosData);
             setPlatos(platosData);
-            setIngredientes(ingredientesData);
         } catch (error) {
             console.error(error);
             toast.error("Error al cargar datos");
@@ -212,12 +207,17 @@ export function UnifiedTransactionView({
         }
     };
 
+    const calculateSubtotal = (cantidad: number, precio: number, extras: ItemExtra[]) => {
+        const extrasTotal = extras.reduce((sum, extra) => sum + (extra.precio * extra.cantidad), 0);
+        return (precio * cantidad) + extrasTotal;
+    };
+
     const updateRow = (id: string, updates: Partial<ItemRow>) => {
         setRows((prev) =>
             prev.map((row) => {
                 if (row.id === id) {
                     const updated = { ...row, ...updates };
-                    updated.subtotal = updated.cantidad * updated.precio;
+                    updated.subtotal = calculateSubtotal(updated.cantidad, updated.precio, updated.extras);
                     return updated;
                 }
                 return row;
@@ -271,36 +271,27 @@ export function UnifiedTransactionView({
 
     // Extras management functions
     const addExtraToRow = (rowId: string) => {
-        const { tipo, ingrediente_id, descripcion, precio, cantidad } = extraForm;
+        const { precio } = extraForm;
 
-        if (tipo === "ingrediente" && !ingrediente_id) {
-            toast.error("Seleccione un ingrediente");
-            return;
-        }
-        if (tipo === "custom" && !descripcion.trim()) {
-            toast.error("Ingrese una descripción");
-            return;
-        }
         if (precio <= 0) {
             toast.error("El precio debe ser mayor a 0");
             return;
         }
 
-        const ingrediente = ingredientes.find((i) => i.id === ingrediente_id);
         const newExtra: ItemExtra = {
             id: crypto.randomUUID(),
-            tipo,
-            ingrediente_id: tipo === "ingrediente" ? ingrediente_id : undefined,
-            ingrediente_nombre: tipo === "ingrediente" ? ingrediente?.nombre : undefined,
-            descripcion: tipo === "custom" ? descripcion : undefined,
+            tipo: "custom",
+            descripcion: "Extra",
             precio,
-            cantidad,
+            cantidad: 1,
         };
 
         setRows((prev) =>
             prev.map((row) => {
                 if (row.id === rowId) {
-                    return { ...row, extras: [...row.extras, newExtra] };
+                    const updatedExtras = [...row.extras, newExtra];
+                    const subtotal = calculateSubtotal(row.cantidad, row.precio, updatedExtras);
+                    return { ...row, extras: updatedExtras, subtotal };
                 }
                 return row;
             })
@@ -308,11 +299,7 @@ export function UnifiedTransactionView({
 
         // Reset form
         setExtraForm({
-            tipo: "ingrediente",
-            ingrediente_id: "",
-            descripcion: "",
             precio: 0,
-            cantidad: 1,
         });
 
         toast.success("Extra agregado");
@@ -322,7 +309,9 @@ export function UnifiedTransactionView({
         setRows((prev) =>
             prev.map((row) => {
                 if (row.id === rowId) {
-                    return { ...row, extras: row.extras.filter((e) => e.id !== extraId) };
+                    const updatedExtras = row.extras.filter((e) => e.id !== extraId);
+                    const subtotal = calculateSubtotal(row.cantidad, row.precio, updatedExtras);
+                    return { ...row, extras: updatedExtras, subtotal };
                 }
                 return row;
             })
@@ -387,6 +376,12 @@ export function UnifiedTransactionView({
             plato_id: row.tipo === "plato" ? row.item_id : undefined,
             cantidad: row.cantidad,
             notas: row.notas || undefined,
+            extras: row.extras.map(e => ({
+                descripcion: e.descripcion,
+                precio: e.precio,
+                cantidad: e.cantidad,
+                ingrediente_id: e.ingrediente_id
+            }))
         }));
 
         let pagoDto: CreatePagoDto | undefined;
@@ -395,7 +390,7 @@ export function UnifiedTransactionView({
                 metodo_pago: metodoPago,
                 monto: montoPago,
                 monto_recibido: metodoPago === "efectivo" ? montoRecibido : undefined,
-                referencia_qr: metodoPago === "qr" ? referenciaQr : undefined,
+                referencia_qr: undefined,
             };
         }
 
@@ -431,20 +426,15 @@ export function UnifiedTransactionView({
         setShowPayment(false);
         setMontoPago(0);
         setMontoRecibido(0);
-        setReferenciaQr("");
     };
 
+    const ubicacion = ["Mesa", "Para llevar", "Auto", "Sala"];
     const total = rows.reduce((sum, row) => sum + row.subtotal, 0);
     const validItemCount = rows.filter((row) => row.item_id).length;
     const cambio = metodoPago === "efectivo" ? Math.max(0, montoRecibido - montoPago) : 0;
 
     // Auto-set payment amount to total
-    useEffect(() => {
-        if (showPayment && montoPago === 0) {
-            setMontoPago(total);
-            setMontoRecibido(total);
-        }
-    }, [showPayment, total]);
+
 
     if (loading) {
         return (
@@ -478,11 +468,61 @@ export function UnifiedTransactionView({
                                 control={form.control}
                                 name="mesa"
                                 render={({ field }) => (
-                                    <FormItem>
+                                    <FormItem className="flex flex-col">
                                         <FormLabel>Mesa/Ubicación</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="Ej: Mesa 1" {...field} />
-                                        </FormControl>
+                                        <div className="relative">
+                                            <FormControl>
+                                                <Input
+                                                    placeholder="Ej: Mesa 1, Para llevar..."
+                                                    {...field}
+                                                    className="pr-10"
+                                                />
+                                            </FormControl>
+                                            <Popover open={mesaOpen} onOpenChange={setMesaOpen}>
+                                                <PopoverTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        role="combobox"
+                                                        aria-expanded={mesaOpen}
+                                                        className="absolute right-0 top-0 h-full px-2 hover:bg-transparent"
+                                                    >
+                                                        <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+                                                        <span className="sr-only">Toggle options</span>
+                                                    </Button>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-[200px] p-0" align="end">
+                                                    <Command>
+                                                        <CommandList>
+                                                            <CommandGroup>
+                                                                {ubicacion.map((ubic) => (
+                                                                    <CommandItem
+                                                                        key={ubic}
+                                                                        value={ubic}
+                                                                        onSelect={(currentValue) => {
+                                                                            // Command binds value in lowercase, so we need to find the original casing
+                                                                            const originalValue = ubicacion.find((u) => u.toLowerCase() === currentValue.toLowerCase()) || currentValue;
+                                                                            form.setValue("mesa", originalValue === field.value ? "" : originalValue);
+                                                                            setMesaOpen(false);
+                                                                        }}
+                                                                    >
+                                                                        <Check
+                                                                            className={cn(
+                                                                                "mr-2 h-4 w-4",
+                                                                                field.value === ubic
+                                                                                    ? "opacity-100"
+                                                                                    : "opacity-0"
+                                                                            )}
+                                                                        />
+                                                                        {ubic}
+                                                                    </CommandItem>
+                                                                ))}
+                                                            </CommandGroup>
+                                                        </CommandList>
+                                                    </Command>
+                                                </PopoverContent>
+                                            </Popover>
+                                        </div>
                                         <FormMessage />
                                     </FormItem>
                                 )}
@@ -507,9 +547,9 @@ export function UnifiedTransactionView({
                                 name="concepto"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Concepto</FormLabel>
+                                        {/* <FormLabel>Concepto</FormLabel> */}
                                         <FormControl>
-                                            <Input placeholder="Pedido" {...field} />
+                                            <Input placeholder="Pedido" {...field} hidden />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -538,8 +578,6 @@ export function UnifiedTransactionView({
                                             Item (Producto/Plato)
                                         </TableHead>
                                         <TableHead className="w-[120px]">Cantidad</TableHead>
-                                        <TableHead className="w-[120px]">Precio Unit.</TableHead>
-                                        <TableHead className="w-[120px]">Subtotal</TableHead>
                                         <TableHead className="w-[100px]">Extras</TableHead>
                                         <TableHead className="min-w-[200px]">Notas</TableHead>
                                         <TableHead className="w-[60px]"></TableHead>
@@ -554,45 +592,62 @@ export function UnifiedTransactionView({
 
                                             {/* Item Selection */}
                                             <TableCell>
-                                                <Select
-                                                    value={row.item_id}
-                                                    onValueChange={(value) => selectItem(row.id, value)}
-                                                >
-                                                    <SelectTrigger
-                                                        className={cn(row.item_id && "font-medium")}
+                                                <div className="flex flex-col gap-1">
+                                                    <Select
+                                                        value={row.item_id}
+                                                        onValueChange={(value) => selectItem(row.id, value)}
                                                     >
-                                                        <SelectValue placeholder="Seleccionar item..." />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                                                            Platos
+                                                        <SelectTrigger
+                                                            className={cn("h-9", row.item_id && "font-medium")}
+                                                        >
+                                                            <SelectValue placeholder="Seleccionar item..." />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                                                                Platos
+                                                            </div>
+                                                            {platos.map((plato) => (
+                                                                <SelectItem key={plato.id} value={plato.id}>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <Utensils className="h-4 w-4 text-orange-600" />
+                                                                        {plato.nombre} - Bs{" "}
+                                                                        {Number(plato.precio).toFixed(2)}
+                                                                    </div>
+                                                                </SelectItem>
+                                                            ))}
+                                                            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t mt-1">
+                                                                Productos
+                                                            </div>
+                                                            {productos.map((producto) => (
+                                                                <SelectItem
+                                                                    key={producto.id}
+                                                                    value={producto.id}
+                                                                >
+                                                                    <div className="flex items-center gap-2">
+                                                                        <ShoppingBag className="h-4 w-4 text-blue-600" />
+                                                                        {producto.nombre} - Bs{" "}
+                                                                        {Number(producto.precio).toFixed(2)}
+                                                                    </div>
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+
+                                                    {/* Inline Extras Display */}
+                                                    {row.extras.length > 0 && (
+                                                        <div className="flex flex-wrap gap-1 mt-1">
+                                                            {row.extras.map((extra) => (
+                                                                <Badge
+                                                                    key={extra.id}
+                                                                    variant="secondary"
+                                                                    className="px-1.5 py-0.5 text-xs font-normal"
+                                                                >
+                                                                    + {extra.descripcion} : {extra.precio > 0 ? `Bs ${extra.precio.toFixed(2)}` : "Gratis"}
+                                                                </Badge>
+                                                            ))}
                                                         </div>
-                                                        {platos.map((plato) => (
-                                                            <SelectItem key={plato.id} value={plato.id}>
-                                                                <div className="flex items-center gap-2">
-                                                                    <Utensils className="h-4 w-4 text-orange-600" />
-                                                                    {plato.nombre} - Bs{" "}
-                                                                    {Number(plato.precio).toFixed(2)}
-                                                                </div>
-                                                            </SelectItem>
-                                                        ))}
-                                                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t mt-1">
-                                                            Productos
-                                                        </div>
-                                                        {productos.map((producto) => (
-                                                            <SelectItem
-                                                                key={producto.id}
-                                                                value={producto.id}
-                                                            >
-                                                                <div className="flex items-center gap-2">
-                                                                    <ShoppingBag className="h-4 w-4 text-blue-600" />
-                                                                    {producto.nombre} - Bs{" "}
-                                                                    {Number(producto.precio).toFixed(2)}
-                                                                </div>
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
+                                                    )}
+                                                </div>
                                             </TableCell>
 
                                             {/* Cantidad */}
@@ -602,12 +657,12 @@ export function UnifiedTransactionView({
                                                         cantidadInputRefs.current[row.id] = el;
                                                     }}
                                                     type="number"
-                                                    min="0.01"
-                                                    step="0.01"
+                                                    min="0"
+                                                    step="0"
                                                     value={row.cantidad}
                                                     onChange={(e) =>
                                                         updateRow(row.id, {
-                                                            cantidad: parseFloat(e.target.value) || 0,
+                                                            cantidad: parseInt(e.target.value) || 0,
                                                         })
                                                     }
                                                     onKeyDown={(e) =>
@@ -617,15 +672,7 @@ export function UnifiedTransactionView({
                                                 />
                                             </TableCell>
 
-                                            {/* Precio */}
-                                            <TableCell className="text-right font-medium">
-                                                {row.precio > 0 ? `Bs ${row.precio.toFixed(2)}` : "-"}
-                                            </TableCell>
 
-                                            {/* Subtotal */}
-                                            <TableCell className="text-right font-bold">
-                                                {row.subtotal > 0 ? `Bs ${row.subtotal.toFixed(2)}` : "-"}
-                                            </TableCell>
 
                                             {/* Extras */}
                                             <TableCell>
@@ -698,69 +745,8 @@ export function UnifiedTransactionView({
 
                                                             {/* Add extra form */}
                                                             <div className="space-y-2">
-                                                                <Select
-                                                                    value={extraForm.tipo}
-                                                                    onValueChange={(v: "ingrediente" | "custom") =>
-                                                                        setExtraForm({
-                                                                            ...extraForm,
-                                                                            tipo: v,
-                                                                            ingrediente_id: "",
-                                                                            descripcion: "",
-                                                                        })
-                                                                    }
-                                                                >
-                                                                    <SelectTrigger className="h-8 text-xs">
-                                                                        <SelectValue />
-                                                                    </SelectTrigger>
-                                                                    <SelectContent>
-                                                                        <SelectItem value="ingrediente">
-                                                                            Ingrediente
-                                                                        </SelectItem>
-                                                                        <SelectItem value="custom">
-                                                                            Personalizado
-                                                                        </SelectItem>
-                                                                    </SelectContent>
-                                                                </Select>
-
-                                                                {extraForm.tipo === "ingrediente" ? (
-                                                                    <Select
-                                                                        value={extraForm.ingrediente_id}
-                                                                        onValueChange={(v) =>
-                                                                            setExtraForm({
-                                                                                ...extraForm,
-                                                                                ingrediente_id: v,
-                                                                            })
-                                                                        }
-                                                                    >
-                                                                        <SelectTrigger className="h-8 text-xs">
-                                                                            <SelectValue placeholder="Seleccionar..." />
-                                                                        </SelectTrigger>
-                                                                        <SelectContent>
-                                                                            {ingredientes.map((ing) => (
-                                                                                <SelectItem
-                                                                                    key={ing.id}
-                                                                                    value={ing.id}
-                                                                                >
-                                                                                    {ing.nombre}
-                                                                                </SelectItem>
-                                                                            ))}
-                                                                        </SelectContent>
-                                                                    </Select>
-                                                                ) : (
-                                                                    <Input
-                                                                        placeholder="Descripción"
-                                                                        value={extraForm.descripcion}
-                                                                        onChange={(e) =>
-                                                                            setExtraForm({
-                                                                                ...extraForm,
-                                                                                descripcion: e.target.value,
-                                                                            })
-                                                                        }
-                                                                        className="h-8 text-xs"
-                                                                    />
-                                                                )}
-
-                                                                <div className="grid grid-cols-2 gap-2">
+                                                                <div className="grid grid-cols-1 gap-2">
+                                                                    <label className="text-xs font-medium">Precio Extra (Instructivos / Extras)</label>
                                                                     <Input
                                                                         type="number"
                                                                         placeholder="Precio"
@@ -772,21 +758,6 @@ export function UnifiedTransactionView({
                                                                                 ...extraForm,
                                                                                 precio:
                                                                                     parseFloat(e.target.value) || 0,
-                                                                            })
-                                                                        }
-                                                                        className="h-8 text-xs"
-                                                                    />
-                                                                    <Input
-                                                                        type="number"
-                                                                        placeholder="Cant"
-                                                                        step="0.01"
-                                                                        min="0.01"
-                                                                        value={extraForm.cantidad}
-                                                                        onChange={(e) =>
-                                                                            setExtraForm({
-                                                                                ...extraForm,
-                                                                                cantidad:
-                                                                                    parseFloat(e.target.value) || 1,
                                                                             })
                                                                         }
                                                                         className="h-8 text-xs"
@@ -929,16 +900,7 @@ export function UnifiedTransactionView({
                                         </div>
                                     )}
 
-                                    {metodoPago === "qr" && (
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-medium">Referencia QR</label>
-                                            <Input
-                                                placeholder="Código de referencia"
-                                                value={referenciaQr}
-                                                onChange={(e) => setReferenciaQr(e.target.value)}
-                                            />
-                                        </div>
-                                    )}
+
                                 </div>
                             )}
                         </div>

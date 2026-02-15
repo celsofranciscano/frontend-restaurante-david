@@ -111,3 +111,33 @@ export type CreatePagoDto = {
     monto_recibido?: number;
     referencia_qr?: string;
 };
+
+// UI Types
+export interface ItemExtra {
+    id: string;
+    tipo: "ingrediente" | "custom";
+    ingrediente_id?: string;
+    ingrediente_nombre?: string;
+    descripcion?: string;
+    precio: number;
+    cantidad: number;
+}
+
+export interface ItemRow {
+    id: string;
+    tipo: "producto" | "plato" | "";
+    item_id: string;
+    item_nombre: string;
+    cantidad: number;
+    precio: number;
+    notas: string;
+    extras: ItemExtra[];
+    subtotal: number;
+}
+
+export interface TransaccionFormValues {
+    concepto: string;
+    mesa?: string;
+    cliente?: string;
+    estado: "pendiente" | "abierto" | "cerrado";
+}

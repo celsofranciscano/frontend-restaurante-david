@@ -274,13 +274,15 @@ export function useTransaccionesPage() {
 
     const filteredTransacciones = (estado: string) => {
         if (estado === "todos") return transacciones;
+        if (estado === "pendiente") return transacciones.filter((t) => t.estado === "pendiente" || t.estado_cocina === "pendiente");
+        if (estado === "abierto") return transacciones.filter((t) => t.estado === "abierto" && t.estado_cocina !== "pendiente");
         return transacciones.filter((t) => t.estado === estado);
     };
 
     const counts = {
         todos: transacciones.length,
-        pendiente: transacciones.filter((t) => t.estado === "pendiente").length,
-        abierto: transacciones.filter((t) => t.estado === "abierto").length,
+        pendiente: transacciones.filter((t) => t.estado === "pendiente" || t.estado_cocina === "pendiente").length,
+        abierto: transacciones.filter((t) => t.estado === "abierto" && t.estado_cocina !== "pendiente").length,
         cerrado: transacciones.filter((t) => t.estado === "cerrado").length,
         cocina: pedidosCocina.length,
     };

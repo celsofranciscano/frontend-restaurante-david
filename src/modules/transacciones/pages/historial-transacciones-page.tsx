@@ -141,9 +141,7 @@ export function HistorialTransaccionesPage() {
                                         <TransaccionesTable
                                             transacciones={group.items}
                                             onView={handleView}
-                                            onEdit={() => { }} // Read only
-                                            onDelete={() => { }} // Read only
-                                            onPay={() => { }} // Read only
+                                            readOnly={true}
                                         />
                                     </AccordionContent>
                                 </AccordionItem>

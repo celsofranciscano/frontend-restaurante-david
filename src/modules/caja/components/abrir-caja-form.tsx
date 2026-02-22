@@ -13,7 +13,7 @@ import { Form } from '@/components/ui/form';
 import { toast } from 'sonner';
 import { cajaService } from '../services/caja.service';
 import { MoneyInput } from './money-input';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const abrirCajaSchema = z.object({
   b200: z.number().min(0).optional(),
@@ -45,6 +45,31 @@ export function AbrirCajaForm({ onCajaOpened }: AbrirCajaFormProps) {
       m2: 0, m1: 0, m050: 0, m020: 0, m010: 0,
     },
   });
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchLastBox = async () => {
+      try {
+        const historial = await cajaService.obtenerHistorial(1);
+        if (mounted && historial && historial.length > 0) {
+          const lastCaja = historial[0];
+          // Cargar SOLO las monedas de la última caja cerrada
+          form.reset({
+            b200: 0, b100: 0, b50: 0, b20: 0, b10: 0, b5: 0,
+            m2: lastCaja.m2 || 0,
+            m1: lastCaja.m1 || 0,
+            m050: lastCaja.m050 || 0,
+            m020: lastCaja.m020 || 0,
+            m010: lastCaja.m010 || 0,
+          });
+        }
+      } catch (error) {
+        console.error("Error obteniendo la última caja:", error);
+      }
+    };
+    fetchLastBox();
+    return () => { mounted = false; };
+  }, [form]);
 
   const onSubmit = async (values: AbrirCajaFormValues) => {
     try {

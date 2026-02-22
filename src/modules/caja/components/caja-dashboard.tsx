@@ -11,6 +11,8 @@ import { format } from 'date-fns';
 import { ArrowDownCircle, ArrowUpCircle, Wallet, CreditCard, Lock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { transaccionesService } from '../../transacciones/services/transacciones.service';
+import { toast } from 'sonner';
 
 interface CajaDashboardProps {
   caja: CajaTurnoResponse;
@@ -31,6 +33,7 @@ interface StatusCardProps {
 export function CajaDashboard({ caja, onCerrarCajaClick }: CajaDashboardProps) {
   const [resumen, setResumen] = useState<ResumenCierre | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isVerifying, setIsVerifying] = useState(false);
   const navigate = useNavigate();
 
   const fetchResumen = async () => {
@@ -48,6 +51,31 @@ export function CajaDashboard({ caja, onCerrarCajaClick }: CajaDashboardProps) {
   useEffect(() => {
     fetchResumen();
   }, [caja.id]);
+
+  const handleCerrarCaja = async () => {
+    try {
+      setIsVerifying(true);
+      const transacciones = await transaccionesService.getByCaja(caja.id);
+      const hasPending = transacciones.some(t =>
+        t.estado === 'pendiente' ||
+        t.estado === 'abierto' ||
+        Number(t.monto_pendiente) > 0 ||
+        t.estado_cocina === 'pendiente'
+      );
+
+      if (hasPending) {
+        toast.error("Hay pedidos pendientes, abiertos, por pagar o en cocina. Termínelos antes de cerrar caja.");
+        return;
+      }
+
+      onCerrarCajaClick();
+    } catch (error) {
+      console.error('Error al validar caja:', error);
+      toast.error('Error al verificar pedidos pendientes.');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
 
   if (!resumen && loading) return <DashboardSkeleton />;
 
@@ -70,9 +98,9 @@ export function CajaDashboard({ caja, onCerrarCajaClick }: CajaDashboardProps) {
             <CreditCard className="h-4 w-4" />
             Reporte
           </Button>
-          <Button variant="default" onClick={onCerrarCajaClick} className="gap-2 flex-1 md:flex-none">
+          <Button variant="default" onClick={handleCerrarCaja} disabled={isVerifying} className="gap-2 flex-1 md:flex-none">
             <Lock className="h-4 w-4" />
-            Cerrar Caja
+            {isVerifying ? "Verificando..." : "Cerrar Caja"}
           </Button>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import {  Edit, Trash2, CreditCard, CheckCircle2, Clock, ChefHat, AlertCircle } from "lucide-react";
+import { Edit, Trash2, CreditCard, CheckCircle2, Clock, ChefHat, AlertCircle, Eye } from "lucide-react";
 import {
     Table,
     TableBody,
@@ -26,9 +26,10 @@ import { formatDate, formatTime } from "@/utils/date-format";
 type TransaccionesTableProps = {
     transacciones: Transaccion[];
     onView: (transaccion: Transaccion) => void;
-    onEdit: (transaccion: Transaccion) => void;
-    onDelete: (id: number) => void;
-    onPay: (transaccion: Transaccion) => void;
+    onEdit?: (transaccion: Transaccion) => void;
+    onDelete?: (id: number) => void;
+    onPay?: (transaccion: Transaccion) => void;
+    readOnly?: boolean;
 };
 
 const getEstadoBadge = (estado: string) => {
@@ -94,10 +95,11 @@ const getPendientesBadges = (montoPendiente: string, estadoCocina?: string) => {
 
 export function TransaccionesTable({
     transacciones,
-    
+    onView,
     onEdit,
     onDelete,
     onPay,
+    readOnly = false,
 }: TransaccionesTableProps) {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [transaccionToDelete, setTransaccionToDelete] = useState<Transaccion | null>(null);
@@ -108,7 +110,7 @@ export function TransaccionesTable({
     };
 
     const handleConfirmDelete = () => {
-        if (transaccionToDelete) {
+        if (transaccionToDelete && onDelete) {
             onDelete(transaccionToDelete.id);
             setDeleteDialogOpen(false);
             setTransaccionToDelete(null);
@@ -193,41 +195,54 @@ export function TransaccionesTable({
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center justify-end gap-2">
-
-
-                                                {!isPagado && !isCerrado && (
-                                                    <Button
-                                                        variant="default"
-                                                        size="sm"
-                                                        onClick={() => onPay(transaccion)}
-                                                        className="bg-green-600 hover:bg-green-700"
-                                                        title="Procesar pago"
-                                                    >
-                                                        <CreditCard className="h-4 w-4 mr-1" />
-                                                        Pagar
-                                                    </Button>
-                                                )}
-
-                                                {!isCerrado && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => onEdit(transaccion)}
-                                                        title="Editar transacción"
-                                                    >
-                                                        <Edit className="h-4 w-4" />
-                                                    </Button>
-                                                )}
-
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
-                                                    onClick={() => handleDeleteClick(transaccion)}
-                                                    className="text-destructive hover:text-destructive"
-                                                    title="Eliminar transacción"
+                                                    onClick={() => onView(transaccion)}
+                                                    title="Ver detalles"
                                                 >
-                                                    <Trash2 className="h-4 w-4" />
+                                                    <Eye className="h-4 w-4" />
                                                 </Button>
+
+                                                {!readOnly && (
+                                                    <>
+                                                        {!isPagado && !isCerrado && onPay && (
+                                                            <Button
+                                                                variant="default"
+                                                                size="sm"
+                                                                onClick={() => onPay(transaccion)}
+                                                                className="bg-green-600 hover:bg-green-700"
+                                                                title="Procesar pago"
+                                                            >
+                                                                <CreditCard className="h-4 w-4 mr-1" />
+                                                                Pagar
+                                                            </Button>
+                                                        )}
+
+                                                        {!isCerrado && onEdit && (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => onEdit(transaccion)}
+                                                                title="Editar transacción"
+                                                            >
+                                                                <Edit className="h-4 w-4" />
+                                                            </Button>
+                                                        )}
+
+                                                        {!isCerrado && onDelete && (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => handleDeleteClick(transaccion)}
+                                                                className="text-destructive hover:text-destructive"
+                                                                title="Eliminar transacción"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        )}
+                                                    </>
+                                                )}
                                             </div>
                                         </TableCell>
                                     </TableRow>

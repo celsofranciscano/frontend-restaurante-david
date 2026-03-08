@@ -1,0 +1,16 @@
+node_modules
+dist
+.vscode
+.env
+.env.local
+.git
+.gitignore
+node_modules
+dist
+.git
+.idea
+.vscode
+.env
+package-lock.json
+Dockerfile
+.DS_Store

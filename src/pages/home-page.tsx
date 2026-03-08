@@ -25,9 +25,7 @@ export function HomePage() {
           <Button asChild size="lg">
             <Link to="/login">Iniciar Sesión</Link>
           </Button>
-          <Button asChild variant="outline" size="lg">
-            <Link to="/dashboard">Ver Dashboard</Link>
-          </Button>
+       
         </div>
       </div>
     </div>

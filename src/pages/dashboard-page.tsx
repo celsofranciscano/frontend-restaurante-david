@@ -7,40 +7,72 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
 import DashboardLayout from "@/layouts/dashboard-layout"
-import { Users, Package, Utensils, TrendingUp } from "lucide-react"
+import {
+  Users,
+  Package,
+  Utensils,
+  TrendingUp,
+  ClipboardList,
+  DollarSign,
+  RefreshCw,
+  AlertCircle,
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
+import { useDashboardStats } from "@/modules/dashboard/hooks/use-dashboard-stats"
+
+// Mapa de estado de transacción a color de badge
+const estadoBadgeVariant: Record<
+  string,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
+  pendiente: "secondary",
+  abierto: "default",
+  cerrado: "outline",
+}
 
 export function DashboardPage() {
   const { usuario } = useAuth()
+  const { stats, isLoading, refetch } = useDashboardStats()
 
-  const stats = [
+  const statCards = [
     {
       title: "Usuarios Activos",
-      value: "12",
-      description: "En el sistema",
+      value: stats?.totalUsuarios ?? 0,
+      description: "Registrados en el sistema",
       icon: Users,
-      trend: "+2 esta semana",
     },
     {
       title: "Productos",
-      value: "48",
+      value: stats?.totalProductos ?? 0,
       description: "En inventario",
       icon: Package,
-      trend: "+5 nuevos",
     },
     {
-      title: "Platos",
-      value: "24",
-      description: "En el menú",
+      title: "Platos del Menú",
+      value: stats?.totalPlatos ?? 0,
+      description: "Disponibles hoy",
       icon: Utensils,
-      trend: "3 populares",
     },
     {
       title: "Órdenes Hoy",
-      value: "8",
-      description: "En proceso",
+      value: stats?.transaccionesHoy ?? 0,
+      description: `${stats?.ordenesAbiertas ?? 0} abiertas actualmente`,
       icon: TrendingUp,
-      trend: "+20% vs ayer",
+    },
+    {
+      title: "Órdenes Abiertas",
+      value: stats?.ordenesAbiertas ?? 0,
+      description: "Pendientes o en proceso",
+      icon: ClipboardList,
+    },
+    {
+      title: "Ingresos Hoy",
+      value: `Bs ${Number(stats?.ingresosHoy ?? 0).toFixed(2)}`,
+      description: "De transacciones cerradas",
+      icon: DollarSign,
     },
   ]
 
@@ -48,18 +80,32 @@ export function DashboardPage() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Bienvenida */}
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">
-            ¡Bienvenido, {usuario?.nombre}!
-          </h2>
-          <p className="text-muted-foreground mt-2">
-            Aquí está el resumen de tu restaurante hoy.
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">
+              Bienvenido, {usuario?.nombre}
+            </h2>
+            <p className="text-muted-foreground mt-2">
+              Resumen en tiempo real de tu restaurante.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refetch}
+            disabled={isLoading}
+            className="gap-2"
+          >
+            <RefreshCw
+              className={cn("h-4 w-4", isLoading && "animate-spin")}
+            />
+            Actualizar
+          </Button>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {stats.map((stat) => (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {statCards.map((stat) => (
             <Card key={stat.title}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
@@ -68,20 +114,27 @@ export function DashboardPage() {
                 <stat.icon className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <p className="text-xs text-muted-foreground">
-                  {stat.description}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {stat.trend}
-                </p>
+                {isLoading ? (
+                  <>
+                    <Skeleton className="h-8 w-24 mb-1" />
+                    <Skeleton className="h-3 w-36" />
+                  </>
+                ) : (
+                  <>
+                    <div className="text-2xl font-bold">{stat.value}</div>
+                    <p className="text-xs text-muted-foreground">
+                      {stat.description}
+                    </p>
+                  </>
+                )}
               </CardContent>
             </Card>
           ))}
         </div>
 
-        {/* Info Cards */}
+        {/* Fila inferior */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {/* Información del usuario */}
           <Card>
             <CardHeader>
               <CardTitle>Información de Usuario</CardTitle>
@@ -89,12 +142,12 @@ export function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <div className="flex justify-between items-center">
+                {/* <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">ID:</span>
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-sm text-muted-foreground truncate max-w-[160px]">
                     {usuario?.id}
                   </span>
-                </div>
+                </div> */}
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Nombre:</span>
                   <span className="text-sm text-muted-foreground">
@@ -117,32 +170,60 @@ export function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          {/* Actividad Reciente */}
+          <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle>Actividad Reciente</CardTitle>
-              <CardDescription>Últimas acciones del sistema</CardDescription>
+              <CardDescription>
+                Últimas transacciones del día
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Sistema iniciado correctamente. Todas las funcionalidades están
-                operativas.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Accesos Rápidos</CardTitle>
-              <CardDescription>Módulos disponibles</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                <Badge>Usuarios</Badge>
-                <Badge>Productos</Badge>
-                <Badge>Órdenes</Badge>
-                <Badge>Mesas</Badge>
-                <Badge>Reportes</Badge>
-              </div>
+              {isLoading ? (
+                <div className="space-y-3">
+                  {Array.from({ length: 4 }).map((_, idx) => (
+                    <Skeleton key={idx} className="h-8 w-full" />
+                  ))}
+                </div>
+              ) : (stats?.actividadReciente?.length ?? 0) === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 gap-2 text-muted-foreground">
+                  <AlertCircle className="h-8 w-8" />
+                  <p className="text-sm">Sin actividad registrada hoy</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {stats?.actividadReciente.map((actividad) => (
+                    <div
+                      key={actividad.id}
+                      className="flex items-center justify-between rounded-md border px-3 py-2"
+                    >
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-sm font-medium truncate">
+                          {actividad.concepto}
+                        </span>
+                        {actividad.mesa && (
+                          <span className="text-xs text-muted-foreground">
+                            {actividad.mesa}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0 ml-2">
+                        <Badge
+                          variant={
+                            estadoBadgeVariant[actividad.estado] ?? "secondary"
+                          }
+                          className="capitalize text-xs"
+                        >
+                          {actividad.estado}
+                        </Badge>
+                        <span className="text-sm font-semibold tabular-nums">
+                          Bs {Number(actividad.monto_total).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

@@ -150,7 +150,7 @@ export function TransaccionDialog({
                 <DialogContent className="sm:max-w-[500px]">
                     <DialogHeader>
                         <DialogTitle>
-                            {transaccionToEdit ? "Editar Transacción" : "Nueva Transacción"}
+                            {transaccionToEdit ? "Editar Venta" : "Nueva Venta"}
                         </DialogTitle>
                     </DialogHeader>
                     <Form {...form}>
@@ -265,7 +265,7 @@ export function TransaccionDialog({
                         </AlertDialogMedia>
                         <AlertDialogTitle>No hay una caja abierta</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Debe abrir la caja antes de crear transacciones.
+                            Debe abrir la caja antes de crear ventas.
                             Vaya a la sección de Caja para abrir una caja nueva.
                         </AlertDialogDescription>
                     </AlertDialogHeader>

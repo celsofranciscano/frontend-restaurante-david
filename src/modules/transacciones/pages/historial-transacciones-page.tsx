@@ -37,7 +37,7 @@ export function HistorialTransaccionesPage() {
             setTransacciones(data);
         } catch (error) {
             console.error(error);
-            toast.error("Error al cargar el historial de transacciones");
+            toast.error("Error al cargar el historial de ventas");
         } finally {
             setLoading(false);
         }
@@ -95,11 +95,11 @@ export function HistorialTransaccionesPage() {
         <DashboardLayout>
             <div className="space-y-6 container mx-auto py-6">
                 <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard/transacciones")}>
+                    <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard/ventas")}>
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Historial de Transacciones</h1>
+                        <h1 className="text-3xl font-bold tracking-tight">Historial de Ventas</h1>
                         <p className="text-muted-foreground">
                             Registro completo de todas las ventas ordenadas por fecha.
                         </p>
@@ -111,7 +111,7 @@ export function HistorialTransaccionesPage() {
                         <div className="text-center py-10">Cargando historial...</div>
                     ) : groupedTransacciones.length === 0 ? (
                         <div className="text-center py-10 text-muted-foreground">
-                            No hay transacciones registradas.
+                            No hay ventas registradas.
                         </div>
                     ) : (
                         <Accordion type="multiple" className="w-full space-y-4">

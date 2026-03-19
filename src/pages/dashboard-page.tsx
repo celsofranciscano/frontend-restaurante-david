@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useDashboardStats } from "@/modules/dashboard/hooks/use-dashboard-stats"
 
-// Mapa de estado de transacción a color de badge
+// Mapa de estado de venta a color de badge
 const estadoBadgeVariant: Record<
   string,
   "default" | "secondary" | "destructive" | "outline"
@@ -71,7 +71,7 @@ export function DashboardPage() {
     {
       title: "Ingresos Hoy",
       value: `Bs ${Number(stats?.ingresosHoy ?? 0).toFixed(2)}`,
-      description: "De transacciones cerradas",
+      description: "De ventas cerradas",
       icon: DollarSign,
     },
   ]
@@ -175,7 +175,7 @@ export function DashboardPage() {
             <CardHeader>
               <CardTitle>Actividad Reciente</CardTitle>
               <CardDescription>
-                Últimas transacciones del día
+                Últimas ventas del día
               </CardDescription>
             </CardHeader>
             <CardContent>

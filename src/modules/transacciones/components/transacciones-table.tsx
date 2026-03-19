@@ -139,7 +139,7 @@ export function TransaccionesTable({
                         {transacciones.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
-                                    No hay transacciones registradas
+                                    No hay ventas registradas
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -224,7 +224,7 @@ export function TransaccionesTable({
                                                                 variant="ghost"
                                                                 size="sm"
                                                                 onClick={() => onEdit(transaccion)}
-                                                                title="Editar transacción"
+                                                                title="Editar venta"
                                                             >
                                                                 <Edit className="h-4 w-4" />
                                                             </Button>
@@ -236,7 +236,7 @@ export function TransaccionesTable({
                                                                 size="sm"
                                                                 onClick={() => handleDeleteClick(transaccion)}
                                                                 className="text-destructive hover:text-destructive"
-                                                                title="Eliminar transacción"
+                                                                title="Eliminar venta"
                                                             >
                                                                 <Trash2 className="h-4 w-4" />
                                                             </Button>
@@ -257,9 +257,9 @@ export function TransaccionesTable({
             <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>¿Eliminar transacción?</AlertDialogTitle>
+                        <AlertDialogTitle>¿Eliminar venta?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Esta acción no se puede deshacer. Se eliminará permanentemente la transacción{" "}
+                            Esta acción no se puede deshacer. Se eliminará permanentemente la venta{" "}
                             <span className="font-semibold">#{transaccionToDelete?.nro_reg}</span>
                             {transaccionToDelete?.cliente && (
                                 <> de <span className="font-semibold">{transaccionToDelete.cliente}</span></>

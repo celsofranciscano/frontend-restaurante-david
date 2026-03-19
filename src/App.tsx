@@ -89,7 +89,7 @@ function App() {
             }
           />
           <Route
-            path="/dashboard/transacciones"
+            path="/dashboard/ventas"
             element={
               <ProtectedRoute allowedRoles={['admin', 'cajero']}>
                 <TransaccionesPage />
@@ -97,7 +97,7 @@ function App() {
             }
           />
           <Route
-            path="/transacciones/historial"
+            path="/ventas/historial"
             element={
               <ProtectedRoute allowedRoles={['admin', 'cajero']}>
                 <HistorialTransaccionesPage />

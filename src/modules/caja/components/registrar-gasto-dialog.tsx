@@ -146,7 +146,7 @@ export function RegistrarGastoDialog({
                       <SelectItem value="efectivo">
                         Efectivo (Caja Física)
                       </SelectItem>
-                      <SelectItem value="qr">QR / Transferencia</SelectItem>
+                      {/* <SelectItem value="qr">QR / Transferencia</SelectItem> */}
                     </SelectContent>
                   </Select>
                   <FormMessage />

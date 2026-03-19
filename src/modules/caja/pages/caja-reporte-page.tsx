@@ -165,7 +165,7 @@ export function CajaReportePage() {
                         <Card className="h-full flex flex-col">
                             <CardHeader>
                                 <CardTitle className="flex items-center justify-between">
-                                    <span>Transacciones del Turno</span>
+                                    <span>Ventas del Turno</span>
                                     <span className="text-sm font-normal text-muted-foreground bg-muted px-2 py-1 rounded-md">
                                         {transacciones.length} registros
                                     </span>
@@ -187,7 +187,7 @@ export function CajaReportePage() {
                                     ) : (
                                         <div className="flex flex-col items-center justify-center py-12 text-muted-foreground bg-muted/5 rounded-lg border border-dashed m-4">
                                             <ShoppingCart className="h-12 w-12 mb-2 opacity-20" />
-                                            <p>No hay transacciones registradas aún.</p>
+                                            <p>No hay ventas registradas aún.</p>
                                         </div>
                                     )}
                                 </div>

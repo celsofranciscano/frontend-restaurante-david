@@ -139,7 +139,7 @@ export function PaymentDialog({
                         Procesar Pago
                     </DialogTitle>
                     <DialogDescription>
-                        Transacción #{transaccion.nro_reg} - {transaccion.concepto}
+                        Venta #{transaccion.nro_reg} - {transaccion.concepto}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -304,12 +304,12 @@ export function PaymentDialog({
                                         <FormLabel>Referencia QR</FormLabel>
                                         <FormControl>
                                             <Input
-                                                placeholder="Código de transacción QR"
+                                                placeholder="Código de venta QR"
                                                 {...field}
                                             />
                                         </FormControl>
                                         <FormDescription>
-                                            Código de confirmación de la transacción QR
+                                            Código de confirmación de la venta QR
                                         </FormDescription>
                                         <FormMessage />
                                     </FormItem>

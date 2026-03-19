@@ -3,10 +3,8 @@ import {
   Package,
   Soup,
   Utensils,
-
   ChevronRight,
   Building2,
-
   Users,
   LogOut,
   DollarSign,
@@ -33,75 +31,102 @@ import { cn } from "@/lib/utils"
 import { useAuth } from "@/modules/auth/hooks/useAuth"
 import { Button } from "./ui/button"
 
-const navigationItems = [
+type Rol = 'admin' | 'cajero' | 'mesero' | 'cocinero' | 'gerente';
+
+interface NavItem {
+  title: string;
+  url: string;
+  icon: React.ComponentType<{ className?: string }>;
+  allowedRoles: Rol[];
+}
+
+const navigationItems: NavItem[] = [
   {
     title: "Panel de Control",
     url: "/dashboard",
     icon: LayoutDashboard,
+    allowedRoles: ['admin', 'gerente', 'cajero'],
   },
   {
     title: "Caja",
     url: "/caja",
     icon: DollarSign,
+    allowedRoles: ['admin', 'gerente', 'cajero'],
   },
   {
     title: "Usuarios",
     url: "/dashboard/usuarios",
     icon: Users,
+    allowedRoles: ['admin'],
   },
   {
     title: "Productos",
     url: "/dashboard/productos",
     icon: Package,
+    allowedRoles: ['admin', 'gerente'],
   },
   {
     title: "Ingredientes",
     url: "/dashboard/ingredientes",
     icon: Soup,
+    allowedRoles: ['admin', 'gerente'],
   },
   {
     title: "Platos o Recetas",
     url: "/dashboard/platos",
     icon: Utensils,
+    allowedRoles: ['admin', 'gerente'],
   },
-  // {
-  //   title: "Mesas",
-  //   url: "/dashboard/mesas",
-  //   icon: Table,
-  // },
   {
-    title: "Transacciones",
-    url: "/dashboard/transacciones",
+    title: "Ventas",
+    url: "/dashboard/ventas",
     icon: Receipt,
+    allowedRoles: ['admin', 'gerente', 'cajero'],
   },
   {
     title: "Monitor de Cocina",
     url: "/dashboard/cocina",
     icon: ChefHat,
+    allowedRoles: ['admin', 'gerente', 'cocinero'],
   },
   {
-    title: "Historial de Transacciones",
-    url: "/transacciones/historial",
+    title: "Historial de Ventas",
+    url: "/ventas/historial",
     icon: Receipt,
-  }
-  // {
-  //   title: "Configuración",
-  //   url: "/dashboard/configuracion",
-  //   icon: Settings,
-  // },
+    allowedRoles: ['admin', 'gerente', 'cajero'],
+  },
 ]
+
+const rolLabels: Record<Rol, string> = {
+  admin: 'Administrador',
+  gerente: 'Gerente',
+  cajero: 'Cajero',
+  mesero: 'Mesero',
+  cocinero: 'Cocinero',
+};
+
+const rolColors: Record<Rol, string> = {
+  admin: 'bg-destructive/10 text-destructive',
+  gerente: 'bg-primary/10 text-primary',
+  cajero: 'bg-info/10 text-info',
+  mesero: 'bg-warning/10 text-warning',
+  cocinero: 'bg-secondary text-secondary-foreground',
+};
 
 export function AppSidebar() {
   const location = useLocation()
   const pathname = location.pathname
-  const { logout } = useAuth()
+  const { logout, usuario } = useAuth()
   const currentYear = new Date().getFullYear()
 
+  const userRole = (usuario?.rol?.toLowerCase() as Rol) || 'mesero';
 
+  const visibleItems = navigationItems.filter(item => 
+    item.allowedRoles.includes(userRole)
+  );
 
   return (
     <Sidebar className="border-r bg-background">
-      {/* Header */}
       <SidebarHeader className="px-6 py-6">
         <div className="flex items-center gap-3">
           <div className="flex items-center justify-center size-11 rounded-xl bg-primary/10 border border-primary/20">
@@ -120,7 +145,6 @@ export function AppSidebar() {
 
       <Separator />
 
-      {/* Navegación */}
       <SidebarContent className="px-3 py-4">
         <SidebarGroup>
           <SidebarGroupLabel className="px-3 mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -128,10 +152,11 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
-              {navigationItems.map((item) => {
+              {visibleItems.map((item) => {
                 const isActive =
                   pathname === item.url ||
                   (item.url !== "/dashboard" && pathname.startsWith(item.url))
+                const Icon = item.icon;
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
@@ -155,7 +180,7 @@ export function AppSidebar() {
                                 : "bg-muted group-hover:bg-accent"
                             )}
                           >
-                            <item.icon
+                            <Icon
                               className={cn(
                                 "size-4",
                                 isActive && "text-primary-foreground"
@@ -187,7 +212,6 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Acción de cerrar sesión */}
         <SidebarGroup className="mt-auto">
           <SidebarGroupContent>
             <SidebarMenu>
@@ -206,16 +230,31 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      {/* Footer */}
       <SidebarFooter className="border-t">
-        <div className="p-4">
+        <div className="p-4 space-y-3">
           <div className="px-3 py-2 rounded-lg bg-muted/50">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-medium text-muted-foreground">
+                Usuario
+              </span>
+              <Badge
+                variant="secondary"
+                className={cn("text-xs font-semibold h-5 px-1.5", rolColors[userRole] || 'bg-muted')}
+              >
+                {rolLabels[userRole] || usuario?.rol || 'Sin rol'}
+              </Badge>
+            </div>
+            <div className="text-[11px] text-foreground font-medium truncate">
+              {usuario?.nombre || 'Sin nombre'}
+            </div>
+          </div>
+          <div className="px-3 py-2 rounded-lg bg-muted/30">
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs font-medium text-muted-foreground">
                 Versión
               </span>
               <Badge
-                variant="secondary"
+                variant="outline"
                 className="text-xs font-semibold h-5 px-1.5"
               >
                 v2.0.0

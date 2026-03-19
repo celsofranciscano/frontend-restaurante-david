@@ -73,17 +73,17 @@ export function TransaccionesPage() {
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <div className="space-y-1 sm:space-y-2">
-                        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Transacciones (POS)</h2>
+                        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Ventas (POS)</h2>
                         <p className="text-muted-foreground text-sm sm:text-base">
                             Sistema de punto de venta - Gestiona pedidos, items y pagos.
                         </p>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                        <Button variant="outline" onClick={() => navigate("/transacciones/historial")} className="w-full sm:w-auto">
+                        <Button variant="outline" onClick={() => navigate("/ventas/historial")} className="w-full sm:w-auto">
                             <History className="mr-2 h-4 w-4" /> Historial
                         </Button>
                         <Button onClick={handleCreate} disabled={!cajaAbiertaId} className="w-full sm:w-auto">
-                            <Plus className="mr-2 h-4 w-4" /> Nueva Transacción
+                            <Plus className="mr-2 h-4 w-4" /> Nueva Venta
                         </Button>
                     </div>
                 </div>
@@ -102,7 +102,7 @@ export function TransaccionesPage() {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Listado de Transacciones</CardTitle>
+                        <CardTitle>Listado de Ventas</CardTitle>
                         <CardDescription>
                             Pedidos y órdenes del restaurante organizados por estado.
                         </CardDescription>
@@ -115,7 +115,7 @@ export function TransaccionesPage() {
                             {["todos", "pendiente", "abierto", "cerrado"].map((tab) => (
                                 <TabsContent key={tab} value={tab} className="mt-6">
                                     {loading ? (
-                                        <div className="text-center py-8">Cargando transacciones...</div>
+                                        <div className="text-center py-8">Cargando ventas...</div>
                                     ) : (
                                         <TransaccionesTable
                                             transacciones={filteredTransacciones(tab)}

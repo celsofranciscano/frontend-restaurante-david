@@ -22,10 +22,10 @@ const BILLETES = [
   { key: 'b50', label: 'Bs 50', valor: 50 },
   { key: 'b20', label: 'Bs 20', valor: 20 },
   { key: 'b10', label: 'Bs 10', valor: 10 },
-  { key: 'b5', label: 'Bs 5', valor: 5 },
 ] as const;
 
 const MONEDAS = [
+  { key: 'b5', label: 'Bs 5', valor: 5 },
   { key: 'm2', label: 'Bs 2', valor: 2 },
   { key: 'm1', label: 'Bs 1', valor: 1 },
   { key: 'm050', label: 'Bs 0.50', valor: 0.5 },

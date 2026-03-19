@@ -1,6 +1,8 @@
-import { Banknote, QrCode, TrendingUp, Calendar, DollarSign, ShoppingCart } from "lucide-react";
+import { Banknote, QrCode, TrendingUp, Calendar, DollarSign, ShoppingCart, ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { TransaccionesTable } from "@/modules/transacciones/components/transacciones-table";
 import { useCajaReporte } from "../hooks/use-caja-reporte";
@@ -8,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 export function CajaReportePage() {
+    const navigate = useNavigate();
     const { caja, transacciones, resumen, loading } = useCajaReporte();
 
     if (loading) {
@@ -66,9 +69,18 @@ export function CajaReportePage() {
             <div className="container mx-auto py-4 sm:py-6 space-y-6 sm:space-y-8 max-w-7xl animate-in fade-in duration-500">
                 <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-2">
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => navigate("/caja")}
+                            className="gap-1"
+                        >
+                            <ArrowLeft className="h-4 w-4" />
+                            <span>Volver</span>
+                        </Button>
+                    </div>
 
-
-
+                    <div className="flex items-center gap-2">
                         <div>
                             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Reporte de Caja</h2>
                             <p className="text-muted-foreground capitalize">

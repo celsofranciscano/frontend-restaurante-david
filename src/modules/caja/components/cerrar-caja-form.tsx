@@ -61,8 +61,8 @@ export function CerrarCajaForm({ onCajaClosed, onCancel }: CerrarCajaFormProps) 
   const form = useForm<CerrarCajaFormValues>({
     resolver: zodResolver(cerrarCajaSchema),
     defaultValues: {
-      b200: 0, b100: 0, b50: 0, b20: 0, b10: 0, b5: 0,
-      m2: 0, m1: 0, m050: 0, m020: 0, m010: 0,
+      b200: 0, b100: 0, b50: 0, b20: 0, b10: 0,
+      b5: 0, m2: 0, m1: 0, m050: 0, m020: 0, m010: 0,
       cierre_obs: '',
     },
   });

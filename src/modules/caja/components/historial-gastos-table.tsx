@@ -61,7 +61,7 @@ export function HistorialGastosTable({ gastos }: HistorialGastosTableProps) {
               <TableCell className="text-muted-foreground text-xs">
                  {gasto.usuario_id || 'N/A'}
               </TableCell>
-              <TableCell className="text-right font-bold text-red-600">
+              <TableCell className="text-right font-bold text-destructive">
                 - {gasto.monto.toFixed(2)} Bs
               </TableCell>
             </TableRow>

@@ -120,7 +120,7 @@ export function CerrarCajaForm({ onCajaClosed, onCancel }: CerrarCajaFormProps) 
   const esSobrante = diferencia > 0;
 
   return (
-    <Card className="w-full  mx-auto border-t-4 border-t-red-500">
+    <Card className="w-full  mx-auto border-t-4 border-t-destructive">
       <CardHeader>
         <CardTitle className="flex justify-between items-center">
           <span>Cierre de Caja</span>
@@ -168,7 +168,7 @@ export function CerrarCajaForm({ onCajaClosed, onCancel }: CerrarCajaFormProps) 
             <CardContent className="space-y-3 sm:space-y-4">
               <div className="flex justify-between text-xs sm:text-sm gap-2">
                 <span className="text-muted-foreground">Total en QR (Banco):</span>
-                <span className="font-semibold text-blue-600 dark:text-blue-400 whitespace-nowrap">Bs {resumen.resumen.total_qr.toFixed(2)}</span>
+                <span className="font-semibold text-info whitespace-nowrap">Bs {resumen.resumen.total_qr.toFixed(2)}</span>
               </div>
               <Separator />
               <div className="flex justify-between text-xs sm:text-sm gap-2">
@@ -182,10 +182,10 @@ export function CerrarCajaForm({ onCajaClosed, onCancel }: CerrarCajaFormProps) 
 
               <Separator />
 
-              <div className={`p-3 sm:p-4 rounded-md flex items-start gap-2 sm:gap-3 ${esExacto ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
-                esSobrante ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
-                  'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-                }`}>
+              <div className={`p-3 sm:p-4 rounded-md flex items-start gap-2 sm:gap-3 ${esExacto ? 'bg-success-bg text-success border border-success-border' :
+                  esSobrante ? 'bg-info-bg text-info border border-info-border' :
+                    'bg-destructive/5 text-destructive border border-destructive/20'
+                  }`}>
                 {esExacto ? <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0" /> :
                   esSobrante ? <Info className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0" /> :
                     <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0" />}
@@ -227,7 +227,7 @@ export function CerrarCajaForm({ onCajaClosed, onCancel }: CerrarCajaFormProps) 
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmClose} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogAction onClick={handleConfirmClose} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
               Confirmar Cierre
             </AlertDialogAction>
           </AlertDialogFooter>

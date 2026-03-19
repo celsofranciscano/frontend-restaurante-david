@@ -180,11 +180,11 @@ export function OrderDetailsDialog({
                     </div>
                     <div className="space-y-1">
                         <span className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Pagado</span>
-                        <div className="text-xl font-bold text-green-600">Bs {montoPagado.toFixed(2)}</div>
+                        <div className="text-xl font-bold text-success">Bs {montoPagado.toFixed(2)}</div>
                     </div>
                     <div className="space-y-1">
                         <span className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Pendiente</span>
-                        <div className={cn("text-xl font-bold", montoPendiente > 0 ? "text-orange-600" : "text-muted-foreground")}>
+                        <div className={cn("text-xl font-bold", montoPendiente > 0 ? "text-warning" : "text-muted-foreground")}>
                             Bs {montoPendiente.toFixed(2)}
                         </div>
                     </div>
@@ -269,7 +269,7 @@ export function OrderDetailsDialog({
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
-                                                            className="h-8 w-8 text-muted-foreground hover:text-yellow-600"
+                                                            className="h-8 w-8 text-muted-foreground hover:text-warning"
                                                             onClick={() => onManageExtras(item.id, item.nombre || "Item")}
                                                             title="Gestionar extras"
                                                             disabled={readOnly}
@@ -329,7 +329,7 @@ export function OrderDetailsDialog({
                                                                                 <span>{extra.nombre || "Extra"}</span>
                                                                                 <span className="text-xs font-normal text-muted-foreground">x{extra.cantidad}</span>
                                                                                 <Separator orientation="vertical" className="h-3" />
-                                                                                <span className="font-semibold text-green-600">
+                                                                                <span className="font-semibold text-success">
                                                                                     +Bs {Number(extra.precio).toFixed(2)}
                                                                                 </span>
                                                                             </Badge>
@@ -362,7 +362,7 @@ export function OrderDetailsDialog({
                     {montoPendiente > 0 && !readOnly && (
                         <Button
                             onClick={onPay}
-                            className="sm:flex-[2] bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-md"
+                            className="sm:flex-[2] bg-success hover:bg-success/90 text-success-foreground shadow-md"
                         >
                             Procesar Pago (Bs {montoPendiente.toFixed(2)})
                         </Button>

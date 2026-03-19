@@ -151,14 +151,14 @@ export function PaymentDialog({
                     </div>
                     <div className="flex justify-between items-center">
                         <span className="text-sm text-muted-foreground">Pagado:</span>
-                        <span className="text-green-600 font-medium">
+                        <span className="text-success font-medium">
                             Bs {montoPagado.toFixed(2)}
                         </span>
                     </div>
                     <Separator />
                     <div className="flex justify-between items-center">
                         <span className="font-medium">Pendiente:</span>
-                        <span className="text-xl font-bold text-orange-600">
+                        <span className="text-xl font-bold text-warning">
                             Bs {montoPendiente.toFixed(2)}
                         </span>
                     </div>
@@ -281,12 +281,12 @@ export function PaymentDialog({
                                 />
 
                                 {cambioCalculado > 0 && (
-                                    <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                                    <div className="bg-success-bg dark:bg-success-bg border border-success-border rounded-lg p-4">
                                         <div className="flex justify-between items-center">
-                                            <span className="text-sm font-medium text-green-900 dark:text-green-100">
+                                            <span className="text-sm font-medium text-foreground">
                                                 Cambio a devolver:
                                             </span>
-                                            <Badge variant="outline" className="text-lg font-bold text-green-600">
+                                            <Badge variant="outline" className="text-lg font-bold text-success border-success">
                                                 Bs {cambioCalculado.toFixed(2)}
                                             </Badge>
                                         </div>

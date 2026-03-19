@@ -94,7 +94,7 @@ export function ManageExtrasDialog({
             <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                        <Sparkles className="h-5 w-5 text-yellow-600" />
+                        <Sparkles className="h-5 w-5 text-warning" />
                         Gestionar Extras - {itemName}
                     </DialogTitle>
                 </DialogHeader>

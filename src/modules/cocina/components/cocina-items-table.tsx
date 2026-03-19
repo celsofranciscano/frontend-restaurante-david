@@ -46,8 +46,8 @@ export function CocinaItemsTable({ items }: CocinaItemsTableProps) {
                                             variant="outline"
                                             className={cn(
                                                 "text-lg px-3 py-1 font-bold",
-                                                item.producto_id && "bg-blue-50 border-blue-300",
-                                                item.plato_id && "bg-purple-50 border-purple-300"
+                                                item.producto_id && "bg-info-bg border-info",
+                                                item.plato_id && "bg-accent border-plato"
                                             )}
                                         >
                                             {item.producto_id ? "Producto" : "Plato"}
@@ -77,7 +77,7 @@ export function CocinaItemsTable({ items }: CocinaItemsTableProps) {
                                                     key={extra.id}
                                                     className="text-xl flex items-center gap-2"
                                                 >
-                                                    <span className="text-green-600 font-extrabold text-2xl">
+                                                    <span className="text-success font-extrabold text-2xl">
                                                         +
                                                     </span>
                                                     <span className="font-semibold">

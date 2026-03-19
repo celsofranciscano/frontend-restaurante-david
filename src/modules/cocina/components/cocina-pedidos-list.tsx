@@ -54,7 +54,7 @@ export function CocinaPedidosList({ pedidos }: CocinaPedidosListProps) {
                             <TableHead className="text-center border-r font-bold text-lg py-3 w-[100px]">
                                 Precio
                             </TableHead>
-                            <TableHead className="font-bold text-lg py-3 w-[45%] bg-yellow-100/80 dark:bg-yellow-900/40">
+                            <TableHead className="font-bold text-lg py-3 w-[45%] bg-warning-bg dark:bg-warning-bg">
                                 Instructivos / Extras
                             </TableHead>
                         </TableRow>
@@ -142,7 +142,7 @@ export function CocinaPedidosList({ pedidos }: CocinaPedidosListProps) {
                                         </span>
                                     </TableCell>
 
-                                    <TableCell className="align-middle bg-yellow-50/40 dark:bg-yellow-900/10 py-2 px-3">
+                                    <TableCell className="align-middle bg-warning-bg/40 dark:bg-warning-bg py-2 px-3">
                                         <div className="space-y-2">
                                             {/* {item.extras && item.extras.length > 0 && (
                                                 <div className="flex flex-wrap gap-2">
@@ -151,7 +151,7 @@ export function CocinaPedidosList({ pedidos }: CocinaPedidosListProps) {
                                                             key={extra.id}
                                                             className="flex items-center gap-1.5 bg-background border rounded px-2 py-1 shadow-sm"
                                                         >
-                                                            <span className="text-green-600 font-bold text-lg leading-none">+</span>
+                                                            <span className="text-success font-bold text-lg leading-none">+</span>
                                                             <span className="font-bold text-base leading-none">
                                                                 {extra.nombre ||
                                                                     extra.ingrediente_nombre ||

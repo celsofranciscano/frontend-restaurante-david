@@ -90,15 +90,15 @@ export function CajaReportePage() {
                         title="Ventas Efectivo"
                         value={`Bs ${datos.ventas_efectivo.toFixed(2)}`}
                         subValue="Pagos recibidos en efectivo"
-                        icon={<Banknote className="h-4 w-4 text-green-600" />}
-                        valueClassName="text-green-600"
+                        icon={<Banknote className="h-4 w-4 text-success" />}
+                        valueClassName="text-success"
                     />
                     <MetricCard
                         title="Ventas QR"
                         value={`Bs ${datos.ventas_qr.toFixed(2)}`}
                         subValue="Pagos digitales verificados"
-                        icon={<QrCode className="h-4 w-4 text-blue-600" />}
-                        valueClassName="text-blue-600"
+                        icon={<QrCode className="h-4 w-4 text-info" />}
+                        valueClassName="text-info"
                     />
                     <MetricCard
                         title="Total Generado"
@@ -125,12 +125,12 @@ export function CajaReportePage() {
                                     </div>
                                     <span className="font-mono font-bold">Bs {datos.monto_inicial.toFixed(2)}</span>
                                 </div>
-                                <div className="flex justify-between items-center p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-100 dark:border-red-900/30">
+                                <div className="flex justify-between items-center p-3 bg-destructive/5 dark:bg-destructive/10 rounded-lg border border-destructive/20 dark:border-destructive/30">
                                     <div className="flex items-center gap-2">
-                                        <ShoppingCart className="h-4 w-4 text-red-500" />
+                                        <ShoppingCart className="h-4 w-4 text-destructive" />
                                         <span className="text-sm font-medium">Gastos Totales</span>
                                     </div>
-                                    <span className="font-mono font-bold text-red-600 dark:text-red-400">
+                                    <span className="font-mono font-bold text-destructive">
                                         - Bs {datos.total_gastos.toFixed(2)}
                                     </span>
                                 </div>

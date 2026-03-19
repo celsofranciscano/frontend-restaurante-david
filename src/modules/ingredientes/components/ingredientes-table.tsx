@@ -69,7 +69,7 @@ export function IngredientesTable({
                         <AlertTriangle className="h-3 w-3" /> Bajo Stock
                       </Badge>
                     ) : (
-                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                      <Badge variant="outline" className="bg-success-bg text-success border-success">
                         Normal
                       </Badge>
                     )}

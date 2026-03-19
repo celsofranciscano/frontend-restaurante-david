@@ -80,12 +80,12 @@ export function DashboardPage() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Bienvenida */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
               Bienvenido, {usuario?.nombre}
             </h2>
-            <p className="text-muted-foreground mt-2">
+            <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base">
               Resumen en tiempo real de tu restaurante.
             </p>
           </div>
@@ -94,7 +94,7 @@ export function DashboardPage() {
             size="sm"
             onClick={refetch}
             disabled={isLoading}
-            className="gap-2"
+            className="gap-2 w-full sm:w-auto"
           >
             <RefreshCw
               className={cn("h-4 w-4", isLoading && "animate-spin")}

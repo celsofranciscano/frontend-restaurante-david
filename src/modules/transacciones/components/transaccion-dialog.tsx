@@ -261,7 +261,7 @@ export function TransaccionDialog({
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogMedia>
-                            <AlertTriangleIcon className="text-yellow-600" />
+                            <AlertTriangleIcon className="text-warning" />
                         </AlertDialogMedia>
                         <AlertDialogTitle>No hay una caja abierta</AlertDialogTitle>
                         <AlertDialogDescription>

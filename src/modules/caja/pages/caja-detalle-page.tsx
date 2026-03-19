@@ -166,11 +166,11 @@ export function CajaDetallePage() {
                                         <span>Monto Inicial:</span>
                                         <span className="font-mono">Bs {data.resumen.monto_inicial.toFixed(2)}</span>
                                     </div>
-                                    <div className="flex justify-between text-sm text-green-600">
+                                    <div className="flex justify-between text-sm text-success">
                                         <span>+ Ventas Efectivo:</span>
                                         <span className="font-mono">Bs {data.resumen.ventas_efectivo.toFixed(2)}</span>
                                     </div>
-                                    <div className="flex justify-between text-sm text-red-600">
+                                    <div className="flex justify-between text-sm text-destructive">
                                         <span>- Gastos Efectivo:</span>
                                         <span className="font-mono">Bs {data.resumen.gastos_efectivo.toFixed(2)}</span>
                                     </div>
@@ -178,13 +178,13 @@ export function CajaDetallePage() {
                                         <span>Efectivo Esperado:</span>
                                         <span>Bs {data.resumen.efectivo_esperado.toFixed(2)}</span>
                                     </div>
-                                    <div className="flex justify-between text-sm text-purple-600 font-medium">
+                                    <div className="flex justify-between text-sm text-info font-medium">
                                         <span>(Arqueo) Efectivo Real:</span>
                                         <span className="font-mono">Bs {calculateTotalArqueo(data.caja).toFixed(2)}</span>
                                     </div>
                                     <div className={`flex justify-between text-sm font-bold ${calculateTotalArqueo(data.caja) - data.resumen.efectivo_esperado >= 0
-                                        ? "text-blue-600"
-                                        : "text-red-600"
+                                        ? "text-info"
+                                        : "text-destructive"
                                         }`}>
                                         <span>Diferencia:</span>
                                         <span className="font-mono">
@@ -199,15 +199,15 @@ export function CajaDetallePage() {
                                     <CardTitle className="text-sm font-medium">Digital (QR)</CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-2">
-                                    <div className="flex justify-between text-sm text-blue-600">
+                                    <div className="flex justify-between text-sm text-info">
                                         <span>+ Ventas QR:</span>
                                         <span className="font-mono">Bs {data.resumen.ventas_qr.toFixed(2)}</span>
                                     </div>
-                                    <div className="flex justify-between text-sm text-red-600">
+                                    <div className="flex justify-between text-sm text-destructive">
                                         <span>- Gastos QR:</span>
                                         <span className="font-mono">Bs {data.resumen.gastos_qr.toFixed(2)}</span>
                                     </div>
-                                    <div className="border-t pt-2 flex justify-between font-bold text-blue-700">
+                                    <div className="border-t pt-2 flex justify-between font-bold text-info">
                                         <span>Total QR:</span>
                                         <span>Bs {data.resumen.total_qr.toFixed(2)}</span>
                                     </div>
@@ -215,7 +215,7 @@ export function CajaDetallePage() {
                             </Card>
                         </div>
 
-                        <Card className={data.caja.cerrada ? "bg-muted/30" : "bg-yellow-50 dark:bg-yellow-900/10"}>
+                        <Card className={data.caja.cerrada ? "bg-muted/30" : "bg-warning-bg dark:bg-warning-bg"}>
                             <CardHeader className="pb-2">
                                 <CardTitle className="text-sm font-medium">Estado del Cierre</CardTitle>
                             </CardHeader>
@@ -372,7 +372,7 @@ export function CajaDetallePage() {
                                                 <TableCell className="text-xs text-muted-foreground">
                                                     {formatTimeSafe(gasto.creado_en)}
                                                 </TableCell>
-                                                <TableCell className="text-right font-mono text-red-600">
+                                                <TableCell className="text-right font-mono text-destructive">
                                                     - Bs {gasto.monto.toFixed(2)}
                                                 </TableCell>
                                             </TableRow>

@@ -130,7 +130,7 @@ export function HistorialTransaccionesPage() {
                                                     <Receipt className="h-4 w-4 text-muted-foreground" />
                                                     <span>{group.count} Ventas</span>
                                                 </div>
-                                                <div className="flex items-center gap-1 font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full dark:bg-green-900/20">
+                                                <div className="flex items-center gap-1 font-bold text-success bg-success-bg px-2 py-1 rounded-full border border-success-border">
                                                     <DollarSign className="h-4 w-4" />
                                                     <span>Bs {group.total.toFixed(2)}</span>
                                                 </div>

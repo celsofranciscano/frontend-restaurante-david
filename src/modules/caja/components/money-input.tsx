@@ -69,7 +69,7 @@ export function MoneyInput({ isReadOnly = false }: MoneyInputProps) {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
-              <Banknote className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+              <Banknote className="h-4 w-4 sm:h-5 sm:w-5 text-success" />
               BILLETES
             </CardTitle>
           </CardHeader>
@@ -111,11 +111,11 @@ export function MoneyInput({ isReadOnly = false }: MoneyInputProps) {
                     </TableRow>
                   );
                 })}
-                <TableRow className="bg-blue-50 dark:bg-blue-950/30 font-bold">
+                <TableRow className="bg-info-bg dark:bg-info-bg font-bold">
                   <TableCell colSpan={2} className="text-xs sm:text-sm">
                     Total Billetes
                   </TableCell>
-                  <TableCell className="text-right font-mono text-blue-700 dark:text-blue-400 text-xs sm:text-sm">
+                  <TableCell className="text-right font-mono text-info text-xs sm:text-sm">
                     Bs {totalBilletes.toFixed(2)}
                   </TableCell>
                 </TableRow>
@@ -170,11 +170,11 @@ export function MoneyInput({ isReadOnly = false }: MoneyInputProps) {
                     </TableRow>
                   );
                 })}
-                <TableRow className="bg-blue-50 dark:bg-blue-950/30 font-bold">
+                <TableRow className="bg-info-bg dark:bg-info-bg font-bold">
                   <TableCell colSpan={2} className="text-xs sm:text-sm">
                     Total Monedas
                   </TableCell>
-                  <TableCell className="text-right font-mono text-blue-700 dark:text-blue-400 text-xs sm:text-sm">
+                  <TableCell className="text-right font-mono text-info text-xs sm:text-sm">
                     Bs {totalMonedas.toFixed(2)}
                   </TableCell>
                 </TableRow>

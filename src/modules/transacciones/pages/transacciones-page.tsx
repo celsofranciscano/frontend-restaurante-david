@@ -72,27 +72,27 @@ export function TransaccionesPage() {
         <DashboardLayout>
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                    <div>
-                        <h2 className="text-3xl font-bold tracking-tight">Transacciones (POS)</h2>
-                        <p className="text-muted-foreground">
+                    <div className="space-y-1 sm:space-y-2">
+                        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Transacciones (POS)</h2>
+                        <p className="text-muted-foreground text-sm sm:text-base">
                             Sistema de punto de venta - Gestiona pedidos, items y pagos.
                         </p>
                     </div>
-                    <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => navigate("/transacciones/historial")}>
+                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                        <Button variant="outline" onClick={() => navigate("/transacciones/historial")} className="w-full sm:w-auto">
                             <History className="mr-2 h-4 w-4" /> Historial
                         </Button>
-                        <Button onClick={handleCreate} disabled={!cajaAbiertaId}>
+                        <Button onClick={handleCreate} disabled={!cajaAbiertaId} className="w-full sm:w-auto">
                             <Plus className="mr-2 h-4 w-4" /> Nueva Transacción
                         </Button>
                     </div>
                 </div>
 
                 {!cajaAbiertaId && !loading && (
-                    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4 dark:bg-yellow-900/10">
+                    <div className="bg-warning-bg border-l-4 border-warning-border p-4 mb-4 text-warning-foreground border rounded">
                         <div className="flex">
                             <div className="ml-3">
-                                <p className="text-sm text-yellow-700 dark:text-yellow-400">
+                                <p className="text-sm">
                                     No hay una caja abierta. Debe abrir una caja para registrar nuevas ventas.
                                 </p>
                             </div>

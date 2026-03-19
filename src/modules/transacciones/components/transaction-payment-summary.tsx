@@ -129,8 +129,8 @@ export function TransactionPaymentSummary({
                                         className={cn(
                                             "h-10 px-3 py-2 rounded-md border flex items-center font-bold text-lg",
                                             cambio < 0
-                                                ? "text-red-500 bg-red-50"
-                                                : "text-green-600 bg-green-50"
+                                                ? "text-destructive bg-destructive/5"
+                                                : "text-success bg-success-bg"
                                         )}
                                     >
                                         Bs {cambio.toFixed(2)}

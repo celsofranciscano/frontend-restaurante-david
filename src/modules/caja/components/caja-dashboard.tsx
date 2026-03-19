@@ -114,14 +114,14 @@ export function CajaDashboard({ caja, onCerrarCajaClick }: CajaDashboardProps) {
         <StatusCard
           title="Ventas Efectivo"
           value={datos.ventas_efectivo}
-          icon={<ArrowUpCircle className="h-4 w-4 text-green-500" />}
+          icon={<ArrowUpCircle className="h-4 w-4 text-success" />}
           subValue={`+ ${datos.ventas_qr.toFixed(2)} QR`}
         />
         <StatusCard
           title="Gastos/Salidas"
           value={datos.total_gastos}
-          icon={<ArrowDownCircle className="h-4 w-4 text-red-500" />}
-          className="border-red-200 dark:border-red-900"
+          icon={<ArrowDownCircle className="h-4 w-4 text-destructive" />}
+          className="border-destructive/20 dark:border-destructive/40"
         />
         <StatusCard
           title="Efectivo Esperado"
@@ -159,7 +159,7 @@ export function CajaDashboard({ caja, onCerrarCajaClick }: CajaDashboardProps) {
                         </span>
                       </div>
                     </div>
-                    <div className="font-bold text-red-500">
+                    <div className="font-bold text-destructive">
                       - Bs {gasto.monto.toFixed(2)}
                     </div>
                   </div>
@@ -184,7 +184,7 @@ export function CajaDashboard({ caja, onCerrarCajaClick }: CajaDashboardProps) {
                 <span>Efectivo (Inicial + Ventas)</span>
                 <span>{(datos.monto_inicial + datos.ventas_efectivo).toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-sm text-red-500">
+              <div className="flex justify-between text-sm text-destructive">
                 <span>Gastos Efectivo</span>
                 <span>- {datos.gastos_efectivo.toFixed(2)}</span>
               </div>

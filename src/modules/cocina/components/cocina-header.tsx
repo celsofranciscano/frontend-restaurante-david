@@ -26,7 +26,7 @@ export function CocinaHeader({
                     <div className="flex items-center gap-2">
                         <h2 className="text-2xl font-bold tracking-tight">Monitor de Cocina</h2>
                         {isConnected ? (
-                            <Badge variant="default" className="bg-green-600">
+                            <Badge variant="default" className="bg-success">
                                 <Wifi className="h-3 w-3 mr-1" />
                                 En vivo
                             </Badge>

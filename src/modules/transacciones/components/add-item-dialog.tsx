@@ -171,13 +171,13 @@ export function AddItemDialog({
                                         <SelectContent>
                                             <SelectItem value="producto">
                                                 <div className="flex items-center gap-2">
-                                                    <ShoppingBag className="h-4 w-4 text-blue-600" />
+                                                    <ShoppingBag className="h-4 w-4 text-info" />
                                                     Producto
                                                 </div>
                                             </SelectItem>
                                             <SelectItem value="plato">
                                                 <div className="flex items-center gap-2">
-                                                    <Utensils className="h-4 w-4 text-orange-600" />
+                                                    <Utensils className="h-4 w-4 text-plato" />
                                                     Plato
                                                 </div>
                                             </SelectItem>

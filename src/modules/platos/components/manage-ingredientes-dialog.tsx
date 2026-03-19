@@ -438,7 +438,7 @@ export function ManageIngredientesDialog({
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                    className="h-8 w-8 text-success hover:text-success hover:bg-success-bg"
                                     onClick={() => handleSaveEdit(pi.ingrediente_id, pi.nombre || "")}
                                     title="Guardar"
                                   >
@@ -459,7 +459,7 @@ export function ManageIngredientesDialog({
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                    className="h-8 w-8 text-info hover:text-info hover:bg-info-bg"
                                     onClick={() => handleStartEdit(pi.ingrediente_id, Number(pi.cantidad))}
                                     title="Editar cantidad"
                                   >

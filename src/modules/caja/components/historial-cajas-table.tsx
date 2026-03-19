@@ -84,10 +84,10 @@ export function HistorialCajasTable({ cajas }: HistorialCajasTableProps) {
                 {formatTime(caja.hora_cierre)}
               </TableCell>
               <TableCell>Bs {caja.monto_inicial.toFixed(2)}</TableCell>
-              <TableCell className="text-green-600 font-semibold">
+              <TableCell className="text-success font-semibold">
                 Bs {(caja.ventas_efectivo + caja.ventas_qr).toFixed(2)}
               </TableCell>
-              <TableCell className="text-red-600">
+              <TableCell className="text-destructive">
                 Bs {caja.total_salidas.toFixed(2)}
               </TableCell>
               <TableCell>

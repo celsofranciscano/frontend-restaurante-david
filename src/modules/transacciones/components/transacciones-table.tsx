@@ -43,14 +43,14 @@ const getEstadoBadge = (estado: string) => {
             );
         case "abierto":
             return (
-                <Badge variant="default" className="gap-1 bg-blue-600">
+                <Badge variant="secondary" className="gap-1 bg-info text-info-foreground border-info">
                     <CheckCircle2 className="h-3 w-3" />
                     Abierto
                 </Badge>
             );
         case "cerrado":
             return (
-                <Badge variant="outline" className="gap-1 text-green-600 border-green-600">
+                <Badge variant="outline" className="gap-1 text-success border-success">
                     <CheckCircle2 className="h-3 w-3" />
                     Cerrado
                 </Badge>
@@ -67,7 +67,7 @@ const getPendientesBadges = (montoPendiente: string, estadoCocina?: string) => {
     if (!pendientePago && !pendienteCocina) {
         return (
             <div className="flex items-center gap-1">
-                <Badge variant="outline" className="gap-1 text-green-600 border-green-600">
+                <Badge variant="outline" className="gap-1 text-success border-success">
                     <CheckCircle2 className="h-3 w-3" />
                     Completo
                 </Badge>
@@ -182,7 +182,7 @@ export function TransaccionesTable({
                                             {isNaN(montoPendiente) ? (
                                                 <span className="text-destructive">Error</span>
                                             ) : (
-                                                <span className={montoPendiente > 0 ? "text-orange-600 font-medium" : "text-green-600"}>
+                                                <span className={montoPendiente > 0 ? "text-warning font-medium" : "text-success"}>
                                                     Bs {montoPendiente.toFixed(2)}
                                                 </span>
                                             )}
@@ -211,7 +211,7 @@ export function TransaccionesTable({
                                                                 variant="default"
                                                                 size="sm"
                                                                 onClick={() => onPay(transaccion)}
-                                                                className="bg-green-600 hover:bg-green-700"
+                                                                className="bg-success hover:bg-success/90 text-success-foreground"
                                                                 title="Procesar pago"
                                                             >
                                                                 <CreditCard className="h-4 w-4 mr-1" />
@@ -271,7 +271,7 @@ export function TransaccionesTable({
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleConfirmDelete}
-                            className="bg-red-600  hover:bg-red-700"
+                            className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
                         >
                             Eliminar
                         </AlertDialogAction>

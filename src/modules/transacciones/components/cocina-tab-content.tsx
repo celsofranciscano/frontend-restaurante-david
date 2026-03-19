@@ -84,7 +84,7 @@ export function CocinaTabContent({
                             <TableRow
                                 key={pedido.id}
                                 className={cn(
-                                    esTardado ? "bg-red-50/50 hover:bg-red-50" : ""
+                                    esTardado ? "bg-destructive/5 hover:bg-destructive/10" : ""
                                 )}
                             >
                                 <TableCell className="font-medium">
@@ -131,13 +131,13 @@ export function CocinaTabContent({
                                                 </div>
 
                                                 {item.notas && (
-                                                    <div className="text-sm text-red-600 font-medium ml-[38px] bg-red-50 p-1 rounded w-fit px-2">
+                                                    <div className="text-sm text-destructive font-medium ml-[38px] bg-destructive/5 p-1 rounded w-fit px-2">
                                                         ⚠️ {item.notas}
                                                     </div>
                                                 )}
 
                                                 {item.extras && item.extras.length > 0 && (
-                                                    <div className="ml-[38px] text-sm text-green-700 space-y-0.5 mt-1">
+                                                    <div className="ml-[38px] text-sm text-success space-y-0.5 mt-1">
                                                         {item.extras.map((extra) => (
                                                             <div key={extra.id} className="flex items-center gap-1">
                                                                 <span className="font-bold">+</span>

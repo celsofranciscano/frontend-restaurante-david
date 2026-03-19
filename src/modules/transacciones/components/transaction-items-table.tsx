@@ -121,7 +121,7 @@ export function TransactionItemsTable({
                                                 {platos.map((plato) => (
                                                     <SelectItem key={plato.id} value={plato.id}>
                                                         <div className="flex items-center gap-2">
-                                                            <Utensils className="h-4 w-4 text-orange-600" />
+                                                            <Utensils className="h-4 w-4 text-plato" />
                                                             {plato.nombre} - Bs{" "}
                                                             {Number(plato.precio).toFixed(2)}
                                                         </div>
@@ -136,7 +136,7 @@ export function TransactionItemsTable({
                                                         value={producto.id}
                                                     >
                                                         <div className="flex items-center gap-2">
-                                                            <ShoppingBag className="h-4 w-4 text-blue-600" />
+                                                            <ShoppingBag className="h-4 w-4 text-info" />
                                                             {producto.nombre} - Bs{" "}
                                                             {Number(producto.precio).toFixed(2)}
                                                         </div>
@@ -213,7 +213,7 @@ export function TransactionItemsTable({
                                         <PopoverContent className="w-96" align="start">
                                             <div className="space-y-3">
                                                 <h4 className="font-semibold text-sm flex items-center gap-2">
-                                                    <Sparkles className="h-4 w-4 text-yellow-600" />
+                                                    <Sparkles className="h-4 w-4 text-warning" />
                                                     Extras - {row.item_nombre}
                                                 </h4>
 

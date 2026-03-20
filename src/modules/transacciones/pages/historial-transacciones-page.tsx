@@ -37,7 +37,7 @@ import DashboardLayout from "@/layouts/dashboard-layout";
 import { transaccionesService } from "../services/transacciones.service";
 import { cajaService } from "@/modules/caja/services/caja.service";
 import type { Transaccion } from "../types/transaccion.types";
-import type { CajaTurnoResponse, ResumenCierre } from "@/modules/caja/types/caja.types";
+import type { CajaTurnoResponse, ResumenCierre, GastoCajaResponse } from "@/modules/caja/types/caja.types";
 import { TransaccionesTable } from "../components/transacciones-table";
 import { OrderDetailsDialog } from "../components/order-details-dialog";
 import { PdfPreviewDialog } from "@/modules/caja/components/pdf-preview-dialog";
@@ -61,6 +61,12 @@ interface VentasPorMesa {
     total: number;
 }
 
+declare global {
+    interface Window {
+        __itemsMap?: Record<number, ResumenItem[]>;
+    }
+}
+
 interface CajaGroupData {
     caja: CajaTurnoResponse;
     ventas: Transaccion[];
@@ -77,7 +83,7 @@ interface CajaGroupData {
         ventas_count?: number;
         promedio_venta?: number;
     };
-    gastos: any[];
+    gastos: GastoCajaResponse[];
     itemsMasVendidos: ResumenItem[];
     ventasPorMesa: VentasPorMesa[];
     expanded: boolean;
@@ -138,7 +144,7 @@ export function HistorialTransaccionesPage() {
                 itemsMap[id] = resumenItems || [];
             });
             setCajaDetails(detailsMap);
-            (window as any).__itemsMap = itemsMap;
+            window.__itemsMap = itemsMap;
         } catch (error) {
             console.error(error);
             toast.error("Error al cargar el historial");
@@ -149,7 +155,7 @@ export function HistorialTransaccionesPage() {
 
     // Group transactions by caja
     const groupedByCaja = useMemo((): CajaGroupData[] => {
-        const itemsMap: Record<number, ResumenItem[]> = (window as any).__itemsMap || {};
+        const itemsMap: Record<number, ResumenItem[]> = window.__itemsMap || {};
         
         return cajas.map((caja) => {
             const cajaVentas = transacciones.filter(t => t.caja_id === caja.id);
@@ -251,14 +257,18 @@ export function HistorialTransaccionesPage() {
         }
     };
 
-    const formatTime = (dateStr: string | null) => {
+    const formatTime = (dateStr: string | null | undefined): string => {
         if (!dateStr) return "N/A";
-        try {
-            const date = new Date(dateStr);
-            return format(date, "HH:mm");
-        } catch {
-            return "N/A";
-        }
+        const date = new Date(dateStr);
+        if (!isValid(date)) return "N/A";
+        return format(date, "HH:mm");
+    };
+
+    const safeFormatDateTime = (dateStr?: string | null): string => {
+        if (!dateStr) return "N/A";
+        const date = new Date(dateStr);
+        if (!isValid(date)) return "N/A";
+        return format(date, "dd/MM/yyyy HH:mm");
     };
 
     const handleExportPDF = async (cajaId?: number) => {
@@ -438,20 +448,20 @@ export function HistorialTransaccionesPage() {
                 </div>
 
                 {/* View Tabs */}
-                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "cajas" | "fecha")} className="w-full">
                     <TabsList>
-                        <TabsTrigger value="cajas" className="gap-2">
+                            <TabsTrigger value="cajas" className="gap-2">
                             <FileText className="h-4 w-4" />
                             Por Caja
                         </TabsTrigger>
-                        <TabsTrigger value="fecha" className="gap-2">
-                            <Calendar className="h-4 w-4" />
-                            Por Fecha
-                        </TabsTrigger>
-                    </TabsList>
+                            <TabsTrigger value="fecha" className="gap-2">
+                                <Calendar className="h-4 w-4" />
+                                Por Fecha
+                            </TabsTrigger>
+                        </TabsList>
 
-                    {/* By Caja View */}
-                    <TabsContent value="cajas" className="mt-6">
+                        {/* By Caja View */}
+                        <TabsContent value="cajas" className="mt-6">
                         {loading ? (
                             <div className="text-center py-10">Cargando historial...</div>
                         ) : groupedByCaja.length === 0 ? (
@@ -591,7 +601,7 @@ export function HistorialTransaccionesPage() {
                                                         </div>
                                                         <div className="bg-purple-500/10 rounded-lg p-3">
                                                             <div className="text-xs text-purple-600 dark:text-purple-400 mb-1">N° Ventas</div>
-                                                            <div className="font-semibold">{(group.resumen as any).ventas_count || group.ventas.length}</div>
+                                                            <div className="font-semibold">{group.resumen.ventas_count ?? group.ventas.length}</div>
                                                         </div>
                                                     </div>
 
@@ -728,9 +738,9 @@ export function HistorialTransaccionesPage() {
                                                                                 <td className="px-4 py-2 text-sm text-right font-semibold">
                                                                                     Bs {gasto.monto.toFixed(2)}
                                                                                 </td>
-                                                                                <td className="px-4 py-2 text-sm text-muted-foreground">
-                                                                                    {gasto.creado_en ? format(new Date(gasto.creado_en), "dd/MM/yyyy HH:mm") : "N/A"}
-                                                                                </td>
+                                                                                                        <td className="px-4 py-2 text-sm text-muted-foreground">
+                                                                                                            {safeFormatDateTime(gasto.creado_en)}
+                                                                                                        </td>
                                                                             </tr>
                                                                         ))}
                                                                     </tbody>

@@ -45,7 +45,7 @@ export function CocinaPedidosList({ pedidos }: CocinaPedidosListProps) {
                             <TableHead className="border-r font-bold text-lg py-3 w-[200px]">
                                 Mesa / Cliente
                             </TableHead>
-                            <TableHead className="text-center border-r font-bold text-lg py-3 w-[80px]">
+                            <TableHead className="text-center border-r font-bold text-lg py-3 w-20">
                                 Cant.
                             </TableHead>
                             {/* <TableHead className="border-r font-bold text-lg py-3">
@@ -122,7 +122,7 @@ export function CocinaPedidosList({ pedidos }: CocinaPedidosListProps) {
                                     )}
 
                                     <TableCell className="text-center align-middle border-r py-3 bg-background">
-                                        <span className="font-black text-3xl leading-none text-primary">
+                                 <span className="font-medium text-base text-muted-foreground truncate max-w-[180px]">
                                             {Math.floor(parseFloat(item.cantidad))}
                                         </span>
                                     </TableCell>
@@ -137,7 +137,8 @@ export function CocinaPedidosList({ pedidos }: CocinaPedidosListProps) {
                                     </TableCell> */}
 
                                     <TableCell className="text-center align-middle border-r py-3 bg-background">
-                                        <span className="font-medium text-lg leading-none text-muted-foreground">
+                                                                                              <span className="font-medium text-base text-muted-foreground truncate max-w-[180px]">
+
                                             Bs {parseFloat(item.precio_unitario).toFixed(2)}
                                         </span>
                                     </TableCell>

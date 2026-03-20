@@ -2,7 +2,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { Transaccion, DetalleItem, Pago } from "@/modules/transacciones/types/transaccion.types";
 import type { GastoCajaResponse } from "@/modules/caja/types/caja.types";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 import { es } from "date-fns/locale";
 
 export interface ResumenItem {
@@ -74,14 +74,18 @@ const MONEDAS = [
   { key: 'm010', label: 'Bs 0.10', valor: 0.1 },
 ];
 
-function formatTime(dateStr: string | null): string {
+function formatTime(dateStr: string | null | undefined): string {
   if (!dateStr) return "N/A";
-  try {
-    const date = new Date(dateStr);
-    return format(date, "HH:mm");
-  } catch {
-    return "N/A";
-  }
+  const date = new Date(dateStr);
+  if (!isValid(date)) return "N/A";
+  return format(date, "HH:mm");
+}
+
+function safeFormatDateTime(dateStr?: string | null, fmt = "dd/MM HH:mm"): string {
+  if (!dateStr) return "N/A";
+  const date = new Date(dateStr);
+  if (!isValid(date)) return "N/A";
+  return format(date, fmt);
 }
 
 function getBilletesMonedas(caja: ReporteCajaData['caja']) {
@@ -321,6 +325,7 @@ function buildPDF(doc: jsPDF, data: ReporteCajaData): void {
       theme: "striped",
       headStyles: { fillColor: primaryColor, fontSize: 7, fontStyle: "bold", halign: "center" },
       bodyStyles: { fontSize: 7 },
+      tableWidth: 'auto',
       columnStyles: {
         0: { cellWidth: 28 },
         1: { halign: "center", cellWidth: 18 },
@@ -332,7 +337,7 @@ function buildPDF(doc: jsPDF, data: ReporteCajaData): void {
       margin: { left: marginLeft, right: marginRight - marginLeft },
     });
     
-    currentY = (doc as any).lastAutoTable.finalY + 8;
+    currentY = (doc.lastAutoTable?.finalY ?? 0) + 8;
   }
 
   // ========== PRODUCTOS MAS VENDIDOS ==========
@@ -363,6 +368,7 @@ function buildPDF(doc: jsPDF, data: ReporteCajaData): void {
       theme: "striped",
       headStyles: { fillColor: purpleColor, fontSize: 7, fontStyle: "bold", halign: "center" },
       bodyStyles: { fontSize: 7 },
+      tableWidth: 'auto',
       columnStyles: {
         0: { halign: "center", cellWidth: 12 },
         1: { halign: "center", cellWidth: 25 },
@@ -373,7 +379,7 @@ function buildPDF(doc: jsPDF, data: ReporteCajaData): void {
       margin: { left: marginLeft, right: marginRight - marginLeft },
     });
     
-    currentY = (doc as any).lastAutoTable.finalY + 8;
+    currentY = (doc.lastAutoTable?.finalY ?? 0) + 8;
   }
 
   // ========== VENTAS POR MESA ==========
@@ -403,6 +409,7 @@ function buildPDF(doc: jsPDF, data: ReporteCajaData): void {
       theme: "striped",
       headStyles: { fillColor: infoColor, fontSize: 7, fontStyle: "bold", halign: "center" },
       bodyStyles: { fontSize: 7 },
+      tableWidth: 'auto',
       columnStyles: {
         0: { halign: "center", cellWidth: 15 },
         1: { cellWidth: 85 },
@@ -412,7 +419,7 @@ function buildPDF(doc: jsPDF, data: ReporteCajaData): void {
       margin: { left: marginLeft, right: marginRight - marginLeft },
     });
     
-    currentY = (doc as any).lastAutoTable.finalY + 8;
+    currentY = (doc.lastAutoTable?.finalY ?? 0) + 8;
   }
 
   // ========== DETALLE DE VENTAS ==========
@@ -445,6 +452,7 @@ function buildPDF(doc: jsPDF, data: ReporteCajaData): void {
       theme: "striped",
       headStyles: { fillColor: primaryColor, fontSize: 6, fontStyle: "bold", halign: "center" },
       bodyStyles: { fontSize: 6 },
+      tableWidth: 'auto',
       columnStyles: {
         0: { halign: "center", cellWidth: 14 },
         1: { halign: "center", cellWidth: 22 },
@@ -457,7 +465,7 @@ function buildPDF(doc: jsPDF, data: ReporteCajaData): void {
       margin: { left: marginLeft, right: marginRight - marginLeft },
     });
     
-    currentY = (doc as any).lastAutoTable.finalY + 8;
+    currentY = (doc.lastAutoTable?.finalY ?? 0) + 8;
   } else {
     doc.setTextColor(...secondaryColor);
     doc.setFontSize(8);
@@ -484,7 +492,7 @@ function buildPDF(doc: jsPDF, data: ReporteCajaData): void {
       g.descripcion,
       g.metodo_pago.toUpperCase(),
       `Bs ${g.monto.toFixed(2)}`,
-      g.creado_en ? format(new Date(g.creado_en), "dd/MM HH:mm") : "N/A",
+      safeFormatDateTime(g.creado_en, "dd/MM HH:mm"),
     ]);
     
     autoTable(doc, {
@@ -494,6 +502,7 @@ function buildPDF(doc: jsPDF, data: ReporteCajaData): void {
       theme: "striped",
       headStyles: { fillColor: dangerColor, fontSize: 7, fontStyle: "bold", halign: "center" },
       bodyStyles: { fontSize: 7 },
+      tableWidth: 'auto',
       columnStyles: {
         0: { halign: "center", cellWidth: 12 },
         1: { cellWidth: 75 },
@@ -504,7 +513,7 @@ function buildPDF(doc: jsPDF, data: ReporteCajaData): void {
       margin: { left: marginLeft, right: marginRight - marginLeft },
     });
     
-    currentY = (doc as any).lastAutoTable.finalY + 8;
+    currentY = (doc.lastAutoTable?.finalY ?? 0) + 8;
   }
 
   // ========== CIERRE ==========
@@ -690,7 +699,7 @@ export function generateGeneralReportPDF(
     tableWidth: 110,
   });
 
-  currentY = (doc as any).lastAutoTable.finalY + 15;
+  currentY = (doc.lastAutoTable?.finalY ?? 0) + 15;
 
   // Each caja summary
   cajas.forEach((caja) => {
@@ -732,7 +741,7 @@ export function generateGeneralReportPDF(
       tableWidth: 75,
     });
 
-    currentY = (doc as any).lastAutoTable.finalY + 8;
+    currentY = (doc.lastAutoTable?.finalY ?? 0) + 8;
   });
 
   // Footer

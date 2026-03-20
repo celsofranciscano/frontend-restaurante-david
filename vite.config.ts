@@ -18,4 +18,13 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  optimizeDeps: {
+    include: ['jspdf', 'jspdf-autotable'],
+  },
+  build: {
+    target: 'esnext',
+    rollupOptions: {
+      external: ['canvg', 'core-js']
+    }
+  }
 })

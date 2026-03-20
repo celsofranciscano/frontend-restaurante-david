@@ -12,7 +12,9 @@ import {
     ChevronUp,
     Printer,
     Download,
-    Clock
+    Clock,
+    Utensils,
+    Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,11 +40,26 @@ import type { Transaccion } from "../types/transaccion.types";
 import type { CajaTurnoResponse, ResumenCierre } from "@/modules/caja/types/caja.types";
 import { TransaccionesTable } from "../components/transacciones-table";
 import { OrderDetailsDialog } from "../components/order-details-dialog";
+import { PdfPreviewDialog } from "@/modules/caja/components/pdf-preview-dialog";
+import type { ReporteCajaData } from "@/modules/caja/services/pdf-report.service";
 import { toast } from "sonner";
 import { format, isValid } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { generateCajaReportPDF, generateGeneralReportPDF } from "@/modules/caja/services/pdf-report.service";
+
+interface ResumenItem {
+    nombre: string;
+    cantidad: number;
+    total: number;
+    tipo: 'producto' | 'plato';
+}
+
+interface VentasPorMesa {
+    mesa: string;
+    cantidad: number;
+    total: number;
+}
 
 interface CajaGroupData {
     caja: CajaTurnoResponse;
@@ -57,8 +74,12 @@ interface CajaGroupData {
         total_qr: number;
         total_del_dia: number;
         total_gastos: number;
+        ventas_count?: number;
+        promedio_venta?: number;
     };
     gastos: any[];
+    itemsMasVendidos: ResumenItem[];
+    ventasPorMesa: VentasPorMesa[];
     expanded: boolean;
 }
 
@@ -74,6 +95,10 @@ export function HistorialTransaccionesPage() {
     // View details state
     const [viewingTransaccion, setViewingTransaccion] = useState<Transaccion | null>(null);
     const [orderDetailsOpen, setOrderDetailsOpen] = useState(false);
+
+    // PDF Preview state
+    const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
+    const [pdfPreviewData, setPdfPreviewData] = useState<ReporteCajaData | null>(null);
 
     useEffect(() => {
         loadData();
@@ -92,21 +117,28 @@ export function HistorialTransaccionesPage() {
             // Load details for each caja
             const detailsPromises = cajasData.map(async (caja) => {
                 try {
-                    const detail = await cajaService.obtenerDetalleCaja(caja.id);
-                    return { id: caja.id, detail };
+                    const [detail, resumenItems] = await Promise.all([
+                        cajaService.obtenerDetalleCaja(caja.id),
+                        transaccionesService.getResumenItems(caja.id).catch(() => []),
+                    ]);
+                    return { id: caja.id, detail, resumenItems };
                 } catch {
-                    return { id: caja.id, detail: null };
+                    return { id: caja.id, detail: null, resumenItems: [] };
                 }
             });
 
             const detailsResults = await Promise.all(detailsPromises);
             const detailsMap: Record<number, ResumenCierre> = {};
-            detailsResults.forEach(({ id, detail }) => {
+            const itemsMap: Record<number, ResumenItem[]> = {};
+            
+            detailsResults.forEach(({ id, detail, resumenItems }) => {
                 if (detail) {
                     detailsMap[id] = detail;
                 }
+                itemsMap[id] = resumenItems || [];
             });
             setCajaDetails(detailsMap);
+            (window as any).__itemsMap = itemsMap;
         } catch (error) {
             console.error(error);
             toast.error("Error al cargar el historial");
@@ -117,9 +149,32 @@ export function HistorialTransaccionesPage() {
 
     // Group transactions by caja
     const groupedByCaja = useMemo((): CajaGroupData[] => {
+        const itemsMap: Record<number, ResumenItem[]> = (window as any).__itemsMap || {};
+        
         return cajas.map((caja) => {
             const cajaVentas = transacciones.filter(t => t.caja_id === caja.id);
             const detail = cajaDetails[caja.id];
+            const cajaItems = itemsMap[caja.id] || [];
+            
+            // Calculate ventas por mesa from ventas data
+            const ventasPorMesaMap: Record<string, { cantidad: number; total: number }> = {};
+            cajaVentas.forEach(v => {
+                const mesa = v.mesa || 'Sin especificar';
+                if (!ventasPorMesaMap[mesa]) {
+                    ventasPorMesaMap[mesa] = { cantidad: 0, total: 0 };
+                }
+                ventasPorMesaMap[mesa].cantidad += 1;
+                ventasPorMesaMap[mesa].total += parseFloat(v.monto_total) || 0;
+            });
+            
+            const ventasPorMesa: VentasPorMesa[] = Object.entries(ventasPorMesaMap)
+                .map(([mesa, data]) => ({ mesa, cantidad: data.cantidad, total: data.total }))
+                .sort((a, b) => b.total - a.total);
+            
+            const ventasCount = cajaVentas.length;
+            const promedioVenta = ventasCount > 0 
+                ? ((caja.ventas_efectivo || 0) + (caja.ventas_qr || 0)) / ventasCount 
+                : 0;
             
             return {
                 caja,
@@ -134,8 +189,12 @@ export function HistorialTransaccionesPage() {
                     total_qr: caja.ventas_qr || 0,
                     total_del_dia: (caja.ventas_efectivo || 0) + (caja.ventas_qr || 0),
                     total_gastos: 0,
+                    ventas_count: ventasCount,
+                    promedio_venta: promedioVenta,
                 },
                 gastos: detail?.gastos || [],
+                itemsMasVendidos: cajaItems,
+                ventasPorMesa,
                 expanded: expandedCajas[caja.id] || false,
             };
         }).sort((a, b) => b.caja.id - a.caja.id);
@@ -205,26 +264,41 @@ export function HistorialTransaccionesPage() {
     const handleExportPDF = async (cajaId?: number) => {
         try {
             if (cajaId) {
-                const cajaData = groupedByCaja.find(c => c.caja.id === cajaId);
-                if (cajaData) {
-                    generateCajaReportPDF({
+                const cajaGroup = groupedByCaja.find(c => c.caja.id === cajaId);
+                if (cajaGroup) {
+                    const pdfData: ReporteCajaData = {
                         caja: {
-                            id: cajaData.caja.id,
-                            fecha: cajaData.caja.fecha,
-                            hora_apertura: cajaData.caja.hora_apertura,
-                            hora_cierre: cajaData.caja.hora_cierre,
-                            monto_inicial: cajaData.caja.monto_inicial,
-                            cerrada: cajaData.caja.cerrada ?? false,
+                            id: cajaGroup.caja.id,
+                            fecha: cajaGroup.caja.fecha,
+                            hora_apertura: cajaGroup.caja.hora_apertura,
+                            hora_cierre: cajaGroup.caja.hora_cierre,
+                            monto_inicial: cajaGroup.caja.monto_inicial,
+                            cerrada: cajaGroup.caja.cerrada,
                             usuario_nombre: "Usuario",
+                            b200: cajaGroup.caja.b200,
+                            b100: cajaGroup.caja.b100,
+                            b50: cajaGroup.caja.b50,
+                            b20: cajaGroup.caja.b20,
+                            b10: cajaGroup.caja.b10,
+                            b5: cajaGroup.caja.b5,
+                            m2: cajaGroup.caja.m2,
+                            m1: cajaGroup.caja.m1,
+                            m050: cajaGroup.caja.m050,
+                            m020: cajaGroup.caja.m020,
+                            m010: cajaGroup.caja.m010,
                         },
-                        resumen: cajaData.resumen,
-                        ventas: cajaData.ventas,
-                        gastos: cajaData.gastos,
-                    });
-                    toast.success("PDF generado exitosamente");
+                        resumen: cajaGroup.resumen,
+                        ventas: cajaGroup.ventas,
+                        gastos: cajaGroup.gastos,
+                        itemsMasVendidos: cajaGroup.itemsMasVendidos,
+                        ventasPorMesa: cajaGroup.ventasPorMesa,
+                    };
+                    
+                    setPdfPreviewData(pdfData);
+                    setPdfPreviewOpen(true);
                 }
             } else {
-                // Export all cajas
+                // Export all cajas - show preview of first one or generate general
                 const allData = groupedByCaja.map(c => ({
                     caja: {
                         id: c.caja.id,
@@ -234,6 +308,17 @@ export function HistorialTransaccionesPage() {
                         monto_inicial: c.caja.monto_inicial,
                         cerrada: c.caja.cerrada ?? false,
                         usuario_nombre: "Usuario",
+                        b200: c.caja.b200,
+                        b100: c.caja.b100,
+                        b50: c.caja.b50,
+                        b20: c.caja.b20,
+                        b10: c.caja.b10,
+                        b5: c.caja.b5,
+                        m2: c.caja.m2,
+                        m1: c.caja.m1,
+                        m050: c.caja.m050,
+                        m020: c.caja.m020,
+                        m010: c.caja.m010,
                     },
                     resumen: c.resumen,
                     ventas: c.ventas,
@@ -245,6 +330,14 @@ export function HistorialTransaccionesPage() {
         } catch (error) {
             console.error(error);
             toast.error("Error al generar el PDF");
+        }
+    };
+
+    const handleDownloadPDF = () => {
+        if (pdfPreviewData) {
+            generateCajaReportPDF(pdfPreviewData);
+            toast.success("PDF descargado exitosamente");
+            setPdfPreviewOpen(false);
         }
     };
 
@@ -469,9 +562,9 @@ export function HistorialTransaccionesPage() {
                                         {/* Expanded Details */}
                                         <Collapsible open={expandedCajas[group.caja.id]} onOpenChange={() => toggleCaja(group.caja.id)}>
                                             <CollapsibleContent>
-                                                <div className="p-4 border-t">
+                                                <div className="p-4 border-t space-y-6">
                                                     {/* Financial Summary */}
-                                                    <div className="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-6 mb-6">
+                                                    <div className="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
                                                         <div className="bg-muted/30 rounded-lg p-3">
                                                             <div className="text-xs text-muted-foreground mb-1">Monto Inicial</div>
                                                             <div className="font-semibold">Bs {group.resumen.monto_inicial.toFixed(2)}</div>
@@ -496,6 +589,88 @@ export function HistorialTransaccionesPage() {
                                                             <div className="text-xs text-primary mb-1">Efectivo Esperado</div>
                                                             <div className="font-semibold text-primary">Bs {group.resumen.efectivo_esperado.toFixed(2)}</div>
                                                         </div>
+                                                        <div className="bg-purple-500/10 rounded-lg p-3">
+                                                            <div className="text-xs text-purple-600 dark:text-purple-400 mb-1">N° Ventas</div>
+                                                            <div className="font-semibold">{(group.resumen as any).ventas_count || group.ventas.length}</div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Best Sellers & Sales by Table */}
+                                                    <div className="grid gap-6 lg:grid-cols-2">
+                                                        {/* Best Sellers */}
+                                                        {group.itemsMasVendidos && group.itemsMasVendidos.length > 0 && (
+                                                            <div>
+                                                                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                                                                    <Utensils className="h-4 w-4 text-purple-600" />
+                                                                    Productos/Platos Más Vendidos
+                                                                </h4>
+                                                                <div className="border rounded-lg overflow-hidden">
+                                                                    <table className="w-full">
+                                                                        <thead className="bg-purple-500/10">
+                                                                            <tr>
+                                                                                <th className="px-3 py-2 text-left text-xs font-medium text-purple-600">#</th>
+                                                                                <th className="px-3 py-2 text-left text-xs font-medium text-purple-600">Tipo</th>
+                                                                                <th className="px-3 py-2 text-left text-xs font-medium text-purple-600">Nombre</th>
+                                                                                <th className="px-3 py-2 text-right text-xs font-medium text-purple-600">Cant.</th>
+                                                                                <th className="px-3 py-2 text-right text-xs font-medium text-purple-600">Total</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody className="divide-y">
+                                                                            {group.itemsMasVendidos.slice(0, 10).map((item, idx) => (
+                                                                                <tr key={idx} className="hover:bg-muted/50">
+                                                                                    <td className="px-3 py-2 text-sm">#{idx + 1}</td>
+                                                                                    <td className="px-3 py-2 text-sm">
+                                                                                        <span className={cn(
+                                                                                            "px-2 py-0.5 rounded-full text-xs font-medium",
+                                                                                            item.tipo === 'plato' 
+                                                                                                ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" 
+                                                                                                : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                                                                                        )}>
+                                                                                            {item.tipo === 'plato' ? '🍽️' : '📦'}
+                                                                                        </span>
+                                                                                    </td>
+                                                                                    <td className="px-3 py-2 text-sm font-medium">{item.nombre}</td>
+                                                                                    <td className="px-3 py-2 text-sm text-right">{item.cantidad}</td>
+                                                                                    <td className="px-3 py-2 text-sm text-right font-semibold text-success">Bs {item.total.toFixed(2)}</td>
+                                                                                </tr>
+                                                                            ))}
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Sales by Table */}
+                                                        {group.ventasPorMesa && group.ventasPorMesa.length > 0 && (
+                                                            <div>
+                                                                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                                                                    <Users className="h-4 w-4 text-info" />
+                                                                    Ventas por Mesa/Ubicación
+                                                                </h4>
+                                                                <div className="border rounded-lg overflow-hidden">
+                                                                    <table className="w-full">
+                                                                        <thead className="bg-info/10">
+                                                                            <tr>
+                                                                                <th className="px-3 py-2 text-left text-xs font-medium text-info">#</th>
+                                                                                <th className="px-3 py-2 text-left text-xs font-medium text-info">Mesa/Ubicación</th>
+                                                                                <th className="px-3 py-2 text-right text-xs font-medium text-info">Ventas</th>
+                                                                                <th className="px-3 py-2 text-right text-xs font-medium text-info">Total</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody className="divide-y">
+                                                                            {group.ventasPorMesa.map((m, idx) => (
+                                                                                <tr key={idx} className="hover:bg-muted/50">
+                                                                                    <td className="px-3 py-2 text-sm">#{idx + 1}</td>
+                                                                                    <td className="px-3 py-2 text-sm font-medium">{m.mesa}</td>
+                                                                                    <td className="px-3 py-2 text-sm text-right">{m.cantidad}</td>
+                                                                                    <td className="px-3 py-2 text-sm text-right font-semibold text-success">Bs {m.total.toFixed(2)}</td>
+                                                                                </tr>
+                                                                            ))}
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
 
                                                     {/* Sales Table */}
@@ -626,6 +801,14 @@ export function HistorialTransaccionesPage() {
                     onPay={() => { }}
                     onManageExtras={() => { }}
                     readOnly={true}
+                />
+
+                {/* PDF Preview Dialog */}
+                <PdfPreviewDialog
+                    open={pdfPreviewOpen}
+                    onOpenChange={setPdfPreviewOpen}
+                    data={pdfPreviewData}
+                    onDownload={handleDownloadPDF}
                 />
             </div>
         </DashboardLayout>

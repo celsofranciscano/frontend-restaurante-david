@@ -47,6 +47,8 @@ export interface ResumenCierre {
     total_qr: number;
     total_del_dia: number;
     total_gastos: number;
+    ventas_count?: number;
+    promedio_venta?: number;
   };
   gastos: GastoCajaResponse[];
 }

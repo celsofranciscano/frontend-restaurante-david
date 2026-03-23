@@ -199,7 +199,7 @@ export function CajaPage() {
             Caja Cerrada
           </h2>
           <p className="text-muted-foreground">
-            Abre la caja para comenzar a registrar ventas y gastos.
+            Abre la caja para iniciar a registrar ventas y gastos.
           </p>
         </div>
         <AbrirCajaForm onCajaOpened={fetchEstadoCaja} />
@@ -322,7 +322,7 @@ export function CajaPage() {
                   <div>
                     <CardTitle>Historial de Gastos</CardTitle>
                     <CardDescription>
-                      Todos los gastos registrados en el sistema
+                      Todos los gastos registrados
                     </CardDescription>
                   </div>
                 </div>

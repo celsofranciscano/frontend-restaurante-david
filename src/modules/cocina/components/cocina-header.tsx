@@ -24,11 +24,11 @@ export function CocinaHeader({
                 </div>
                 <div>
                     <div className="flex items-center gap-2">
-                        <h2 className="text-2xl font-bold tracking-tight">Monitor de Cocina</h2>
+                        <h2 className="text-2xl font-bold tracking-tight">Metrica de Cocina</h2>
                         {isConnected ? (
                             <Badge variant="default" className="bg-success">
                                 <Wifi className="h-3 w-3 mr-1" />
-                                En vivo
+                                En tiempo real
                             </Badge>
                         ) : (
                             <Badge variant="destructive">

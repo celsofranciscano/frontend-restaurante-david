@@ -63,12 +63,12 @@ export function PlatosPage() {
         toast.success("Plato actualizado correctamente");
       } else {
         await platosService.create(values);
-        toast.success("Plato creado correctamente");
+        toast.success("Plato registrado correctamente");
       }
       fetchPlatos();
     } catch (error) {
       console.error(error);
-      toast.error("Error al guardar plato");
+      toast.error("Error al guardar los datos del plato");
     }
   };
 

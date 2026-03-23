@@ -135,7 +135,7 @@ export function CajaDashboard({ caja, onCerrarCajaClick }: CajaDashboardProps) {
   };
 
   const handleConteoGuardado = (values: DineroValues, total: number) => {
-    console.log('Conteo guardado:', values, total);
+    console.log('Conteo regitrados:', values, total);
     toast.success('Conteo guardado exitosamente');
     fetchResumen();
   };
@@ -292,7 +292,7 @@ export function CajaDashboard({ caja, onCerrarCajaClick }: CajaDashboardProps) {
             <Separator />
             <div className="space-y-2">
               <div className="flex justify-between text-sm items-center">
-                <span className="flex items-center gap-2"><CreditCard className="w-3 h-3" /> Total QR</span>
+                <span className="flex items-center gap-2"><CreditCard className="w-3 h-3" /> Monto Total QR</span>
                 <span>{datos.total_qr.toFixed(2)}</span>
               </div>
             </div>

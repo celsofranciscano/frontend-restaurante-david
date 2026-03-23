@@ -1,235 +1,338 @@
-import { useEffect, useState } from 'react';
-import { Tabs, TabsContent } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { cajaService } from '../services/caja.service';
-import { type CajaTurnoResponse, type GastoCajaResponse } from '../types/caja.types';
-import { AbrirCajaForm } from '../components/abrir-caja-form';
-import { CajaDashboard } from '../components/caja-dashboard';
-import { CerrarCajaForm } from '../components/cerrar-caja-form';
-import { HistorialCajasTable } from '../components/historial-cajas-table';
-import { HistorialGastosTable } from '../components/historial-gastos-table';
-import { Archive, DollarSign, History, ChevronLeft, ChevronRight, Home } from 'lucide-react';
-import DashboardLayout from '@/layouts/dashboard-layout';
-import { cn } from '@/lib/utils';
+import { useEffect, useState, useCallback } from "react";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { cajaService } from "../services/caja.service";
+import type { CajaTurnoResponse, GastoCajaResponse } from "../types/caja.types";
+import { AbrirCajaForm } from "../components/abrir-caja-form";
+import { CajaDashboard } from "../components/caja-dashboard";
+import { CerrarCajaForm } from "../components/cerrar-caja-form";
+import { HistorialCajasTable } from "../components/historial-cajas-table";
+import { HistorialGastosTable } from "../components/historial-gastos-table";
+import {
+  Archive,
+  DollarSign,
+  History,
+  ChevronLeft,
+  ChevronRight,
+  Home,
+} from "lucide-react";
+import DashboardLayout from "@/layouts/dashboard-layout";
+import { cn } from "@/lib/utils";
 
-type TabValue = 'gestion' | 'historial-cajas' | 'historial-gastos';
+type TabValue = "gestion" | "historial-cajas" | "historial-gastos";
 
-const tabsConfig = {
-  'gestion': { label: 'Caja Actual', icon: DollarSign },
-  'historial-cajas': { label: 'Historial Cierres', icon: Archive },
-  'historial-gastos': { label: 'Historial Gastos', icon: History },
+interface TabConfig {
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  shortLabel: string;
+}
+
+const TABS: Record<TabValue, TabConfig> = {
+  gestion: {
+    label: "Caja Actual",
+    shortLabel: "Caja",
+    icon: DollarSign,
+  },
+  "historial-cajas": {
+    label: "Historial Cierres",
+    shortLabel: "Cierres",
+    icon: Archive,
+  },
+  "historial-gastos": {
+    label: "Historial Gastos",
+    shortLabel: "Gastos",
+    icon: History,
+  },
 } as const;
 
+const TAB_ORDER: TabValue[] = [
+  "gestion",
+  "historial-cajas",
+  "historial-gastos",
+];
+
+interface CajaPageState {
+  cajaAbierta: CajaTurnoResponse | null;
+  historialCajas: CajaTurnoResponse[];
+  historialGastos: GastoCajaResponse[];
+  isClosing: boolean;
+  loading: boolean;
+  activeTab: TabValue;
+}
+
 export function CajaPage() {
-  const [cajaAbierta, setCajaAbierta] = useState<CajaTurnoResponse | null>(null);
-  const [isClosing, setIsClosing] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<TabValue>('gestion');
+  const [state, setState] = useState<CajaPageState>({
+    cajaAbierta: null,
+    historialCajas: [],
+    historialGastos: [],
+    isClosing: false,
+    loading: true,
+    activeTab: "gestion",
+  });
 
-  const [historialCajas, setHistorialCajas] = useState<CajaTurnoResponse[]>([]);
-  const [historialGastos, setHistorialGastos] = useState<GastoCajaResponse[]>([]);
-
-  const fetchEstadoCaja = async () => {
+  const fetchEstadoCaja = useCallback(async () => {
     try {
-      setLoading(true);
       const data = await cajaService.obtenerCajaAbierta();
-      setCajaAbierta(data);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
+      setState((prev) => ({ ...prev, cajaAbierta: data }));
+    } catch (err) {
+      console.error("Error al obtener caja abierta:", err);
     }
-  };
+  }, []);
 
-  const loadHistory = async () => {
+  const fetchHistorial = useCallback(async () => {
     try {
       const [cajas, gastos] = await Promise.all([
         cajaService.obtenerHistorial(),
-        cajaService.obtenerHistorialGastos()
+        cajaService.obtenerHistorialGastos(),
       ]);
-      setHistorialCajas(cajas);
-      setHistorialGastos(gastos);
-    } catch (error) {
-      console.error(error);
+      setState((prev) => ({
+        ...prev,
+        historialCajas: cajas,
+        historialGastos: gastos,
+      }));
+    } catch (err) {
+      console.error("Error al cargar historial:", err);
     }
-  };
-
-  useEffect(() => {
-    fetchEstadoCaja();
-    loadHistory();
   }, []);
 
+  const loadInitialData = useCallback(async () => {
+    setState((prev) => ({ ...prev, loading: true }));
+    await Promise.all([fetchEstadoCaja(), fetchHistorial()]);
+    setState((prev) => ({ ...prev, loading: false }));
+  }, [fetchEstadoCaja, fetchHistorial]);
+
+  useEffect(() => {
+    loadInitialData();
+  }, [loadInitialData]);
+
   const handleTabChange = (value: string) => {
-    setActiveTab(value as TabValue);
-    if (value !== 'gestion') {
-      loadHistory();
+    const newTab = value as TabValue;
+    setState((prev) => ({ ...prev, activeTab: newTab }));
+
+    if (newTab !== "gestion") {
+      fetchHistorial();
     }
   };
 
-  const goBack = () => {
-    if (activeTab === 'historial-gastos') {
-      setActiveTab('historial-cajas');
-    } else if (activeTab === 'historial-cajas') {
-      setActiveTab('gestion');
+  const navigateTab = (direction: "prev" | "next") => {
+    setState((prev) => {
+      const currentIdx = TAB_ORDER.indexOf(prev.activeTab);
+      let nextIdx = currentIdx;
+
+      if (direction === "prev" && currentIdx > 0) {
+        nextIdx = currentIdx - 1;
+      } else if (direction === "next" && currentIdx < TAB_ORDER.length - 1) {
+        nextIdx = currentIdx + 1;
+      }
+
+      const nextTab = TAB_ORDER[nextIdx];
+      if (nextTab !== prev.activeTab) {
+        if (nextTab !== "gestion") {
+          fetchHistorial();
+        }
+        return { ...prev, activeTab: nextTab };
+      }
+      return prev;
+    });
+  };
+
+  const goBack = () => navigateTab("prev");
+  const goForward = () => navigateTab("next");
+
+  const getBreadcrumb = (tab: TabValue): string => {
+    switch (tab) {
+      case "gestion":
+        return "Gestión de Caja";
+      case "historial-cajas":
+        return "Historial de Cierres";
+      case "historial-gastos":
+        return "Historial de Gastos";
     }
   };
 
-  const goForward = () => {
-    if (activeTab === 'gestion') {
-      setActiveTab('historial-cajas');
-    } else if (activeTab === 'historial-cajas') {
-      setActiveTab('historial-gastos');
-    }
-  };
-
-  const getBreadcrumb = () => {
-    switch (activeTab) {
-      case 'gestion':
-        return 'Gestión de Caja';
-      case 'historial-cajas':
-        return 'Historial de Cierres';
-      case 'historial-gastos':
-        return 'Historial de Gastos';
-    }
-  };
-
-  if (loading) return (
-    <DashboardLayout>
-      <div className="p-8 text-center">Cargando sistema de caja...</div>
-    </DashboardLayout>
-  );
-
-  const tabOrder: TabValue[] = ['gestion', 'historial-cajas', 'historial-gastos'];
-  const currentIndex = tabOrder.indexOf(activeTab);
+  const currentIndex = TAB_ORDER.indexOf(state.activeTab);
   const canGoBack = currentIndex > 0;
-  const canGoForward = currentIndex < tabOrder.length - 1;
+  const canGoForward = currentIndex < TAB_ORDER.length - 1;
+
+  if (state.loading) {
+    return (
+      <DashboardLayout>
+        <div className="p-8 text-center">Cargando sistema de caja...</div>
+      </DashboardLayout>
+    );
+  }
+
+  const renderGestionContent = () => {
+    if (state.cajaAbierta) {
+      if (state.isClosing) {
+        return (
+          <CerrarCajaForm
+            onCajaClosed={() => {
+              setState((s) => ({ ...s, isClosing: false }));
+              fetchEstadoCaja();
+              fetchHistorial();
+            }}
+            onCancel={() => setState((s) => ({ ...s, isClosing: false }))}
+          />
+        );
+      }
+
+      return (
+        <CajaDashboard
+          caja={state.cajaAbierta}
+          onCerrarCajaClick={() => setState((s) => ({ ...s, isClosing: true }))}
+        />
+      );
+    }
+
+    return (
+      <div className="flex flex-col items-center justify-center w-full py-8">
+        <div className="text-center space-y-3 mb-6">
+          <h2 className="text-2xl font-bold text-muted-foreground/70">
+            Caja Cerrada
+          </h2>
+          <p className="text-muted-foreground">
+            Abre la caja para comenzar a registrar ventas y gastos.
+          </p>
+        </div>
+        <AbrirCajaForm onCajaOpened={fetchEstadoCaja} />
+      </div>
+    );
+  };
 
   return (
     <DashboardLayout>
-      <div className="container mx-auto py-4 sm:py-6 space-y-4">
+      <div className="container mx-auto py-4 sm:py-6 space-y-6">
+        {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Gestión de Caja</h1>
-            <p className="text-muted-foreground text-sm mt-1">{getBreadcrumb()}</p>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+              Gestión de Caja
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              {getBreadcrumb(state.activeTab)}
+            </p>
           </div>
         </div>
 
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={goBack}
-              disabled={!canGoBack}
-              className="gap-1"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">Anterior</span>
-            </Button>
+        {/* Navigation */}
+        <div className="flex items-center justify-between gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={goBack}
+            disabled={!canGoBack}
+            className="gap-1.5"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Anterior</span>
+          </Button>
 
-            <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
-              {tabOrder.map((tab) => (
+          <div className="flex items-center gap-1 bg-muted/60 rounded-lg p-1 border">
+            {TAB_ORDER.map((tab) => {
+              const { icon: Icon, label, shortLabel } = TABS[tab];
+              const isActive = state.activeTab === tab;
+
+              return (
                 <Button
                   key={tab}
-                  variant={activeTab === tab ? "default" : "ghost"}
+                  variant={isActive ? "default" : "ghost"}
                   size="sm"
                   onClick={() => handleTabChange(tab)}
                   className={cn(
-                    "gap-1 sm:gap-2 px-2 sm:px-3",
-                    activeTab === tab && "shadow-sm"
+                    "gap-1.5 px-3 sm:px-4 transition-all",
+                    isActive && "shadow-sm",
                   )}
                 >
-                  {(() => {
-                    const Icon = tabsConfig[tab].icon;
-                    return <Icon className="h-4 w-4" />;
-                  })()}
-                  <span className="hidden sm:inline text-xs sm:text-sm">{tabsConfig[tab].label}</span>
-                  <span className="sm:hidden text-xs">{tab === 'gestion' ? 'Caja' : tab === 'historial-cajas' ? 'Cierres' : 'Gastos'}</span>
+                  <Icon className="h-4 w-4" />
+                  <span className="hidden sm:inline text-sm">{label}</span>
+                  <span className="sm:hidden text-xs">{shortLabel}</span>
                 </Button>
-              ))}
-            </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={goForward}
-              disabled={!canGoForward}
-              className="gap-1"
-            >
-              <span className="hidden sm:inline">Siguiente</span>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+              );
+            })}
           </div>
 
-          <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
-            <TabsContent value="gestion" className="space-y-4">
-              {cajaAbierta ? (
-                isClosing ? (
-                  <CerrarCajaForm
-                    onCajaClosed={() => {
-                      setIsClosing(false);
-                      fetchEstadoCaja();
-                      loadHistory();
-                    }}
-                    onCancel={() => setIsClosing(false)}
-                  />
-                ) : (
-                  <CajaDashboard
-                    caja={cajaAbierta}
-                    onCerrarCajaClick={() => setIsClosing(true)}
-                  />
-                )
-              ) : (
-                <div className="flex flex-col items-center justify-center w-full py-2">
-                  <div className="text-center space-y-2 mb-4">
-                    <h2 className="text-xl sm:text-2xl font-bold text-muted-foreground/50">Caja Cerrada</h2>
-                    <p className="text-muted-foreground text-sm">Abre la caja para comenzar a registrar ventas y gastos.</p>
-                  </div>
-                  <AbrirCajaForm onCajaOpened={fetchEstadoCaja} />
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="historial-cajas">
-              <Card>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => setActiveTab('gestion')} className="h-8 w-8">
-                      <Home className="h-4 w-4" />
-                    </Button>
-                    <div>
-                      <CardTitle>Historial de Turnos</CardTitle>
-                      <CardDescription>Registro de aperturas y cierres de caja.</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <HistorialCajasTable cajas={historialCajas} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="historial-gastos">
-              <Card>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => setActiveTab('gestion')} className="h-8 w-8">
-                      <Home className="h-4 w-4" />
-                    </Button>
-                    <div>
-                      <CardTitle>Historial de Gastos</CardTitle>
-                      <CardDescription>Todos los gastos registrados en el sistema.</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <HistorialGastosTable gastos={historialGastos} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={goForward}
+            disabled={!canGoForward}
+            className="gap-1.5"
+          >
+            <span className="hidden sm:inline">Siguiente</span>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
+
+        {/* Content */}
+        <Tabs
+          value={state.activeTab}
+          onValueChange={handleTabChange}
+          className="space-y-4"
+        >
+          <TabsContent value="gestion" className="mt-2 space-y-4">
+            {renderGestionContent()}
+          </TabsContent>
+
+          <TabsContent value="historial-cajas">
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleTabChange("gestion")}
+                    className="h-8 w-8"
+                  >
+                    <Home className="h-4 w-4" />
+                  </Button>
+                  <div>
+                    <CardTitle>Historial de Turnos</CardTitle>
+                    <CardDescription>
+                      Registro de aperturas y cierres de caja
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <HistorialCajasTable cajas={state.historialCajas} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="historial-gastos">
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleTabChange("gestion")}
+                    className="h-8 w-8"
+                  >
+                    <Home className="h-4 w-4" />
+                  </Button>
+                  <div>
+                    <CardTitle>Historial de Gastos</CardTitle>
+                    <CardDescription>
+                      Todos los gastos registrados en el sistema
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <HistorialGastosTable gastos={state.historialGastos} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
